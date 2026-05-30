@@ -10,17 +10,39 @@ janela.geometry("1000x1000")
 janela.attributes('-fullscreen', True)
 janela.bind('<Escape>', lambda e: janela.attributes('-fullscreen', False))
 janela.grid_columnconfigure(1, weight=1)
+janela.grid_rowconfigure(1,weight=1)
 
-#INICIO
+#MENU
 
-frame_inicio = ctk.CTkFrame(janela, width=300, height=500)
-frame_inicio.grid(row=0, column=0, sticky="ns", padx=10, pady=10)
+frame_menu = ctk.CTkFrame(janela, width= 200,height=350)
+frame_menu.grid_propagate(False)
+frame_menu.grid_columnconfigure(0,weight=1)
+frame_menu.grid_rowconfigure(0,weight=1)
+frame_menu.grid(column=0,row=0, padx=20,pady=10)
 
-inicio = ctk.CTkLabel(janela,text="INICIO")
-inicio.grid(row=1, column=0, padx=100,pady=90)
+menu = ctk.CTkLabel(frame_menu,text='HISTÓRIAS')
+menu.grid(column=0,row=0,sticky="n",padx=10,pady=10)
 
-menu = ctk.CTkLabel(janela,text='MENU')
-menu.grid(row=1, column=1, padx=100,pady=90)
+#INFORMAÇÕES
 
+frame_inf = ctk.CTkFrame(janela,width=200,height=350)
+frame_inf.grid_propagate(False)
+frame_inf.grid_columnconfigure(0,weight=1)
+frame_inf.grid_rowconfigure(0,weight=1)
+frame_inf.grid(column=0,row=1,padx=20,pady=10)
+
+inicio = ctk.CTkLabel(frame_inf,text='INFORMAÇÕES')
+inicio.grid(column=0,row=0,sticky="n",padx=10,pady=10)
+
+#CONTEUDO
+
+frame_conteudo = ctk.CTkFrame(janela)
+frame_conteudo.grid_propagate(False)
+frame_conteudo.grid_columnconfigure(0,weight=1)
+frame_conteudo.grid_rowconfigure(0,weight=1)
+frame_conteudo.grid(column=1, row=0, columnspan=5, rowspan=5, sticky="nsew",padx=20,pady=10)
+
+conteudo = ctk.CTkLabel(frame_conteudo,text='CONTEUDO')
+conteudo.grid(column=0,row=0,sticky="n",padx=10,pady=10)
 
 janela.mainloop()
