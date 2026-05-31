@@ -18,7 +18,7 @@ frame_menu = ctk.CTkFrame(janela, width= 200,height=350)
 frame_menu.grid_propagate(False)
 frame_menu.grid_columnconfigure(0,weight=1)
 frame_menu.grid_rowconfigure(0,weight=1)
-frame_menu.grid(column=0,row=0, padx=20,pady=10)
+frame_menu.grid(column=0,row=1, padx=20,pady=10)
 
 menu = ctk.CTkLabel(frame_menu,text='HISTÓRIAS')
 menu.grid(column=0,row=0,sticky="n",padx=10,pady=10)
@@ -29,7 +29,7 @@ frame_inf = ctk.CTkFrame(janela,width=200,height=350)
 frame_inf.grid_propagate(False)
 frame_inf.grid_columnconfigure(0,weight=1)
 frame_inf.grid_rowconfigure(0,weight=1)
-frame_inf.grid(column=0,row=1,padx=20,pady=10)
+frame_inf.grid(column=0,row=2,padx=20,pady=10)
 
 inicio = ctk.CTkLabel(frame_inf,text='INFORMAÇÕES')
 inicio.grid(column=0,row=0,sticky="n",padx=10,pady=10)
@@ -40,9 +40,21 @@ frame_conteudo = ctk.CTkFrame(janela)
 frame_conteudo.grid_propagate(False)
 frame_conteudo.grid_columnconfigure(0,weight=1)
 frame_conteudo.grid_rowconfigure(0,weight=1)
-frame_conteudo.grid(column=1, row=0, columnspan=5, rowspan=5, sticky="nsew",padx=20,pady=10)
+frame_conteudo.grid(column=1, row=0, columnspan=5, rowspan=5, sticky="nsew",padx=10,pady=10)
 
 conteudo = ctk.CTkLabel(frame_conteudo,text='CONTEUDO')
 conteudo.grid(column=0,row=0,sticky="n",padx=10,pady=10)
+
+#CAIXA
+
+caixa_frame = ctk.CTkFrame(janela,width= 200,height=50)
+caixa_frame.grid_propagate(False)
+caixa_frame.grid(column=0,row=0,padx=10,pady=10)
+
+botaofake = ctk.CTkLabel(caixa_frame,text="butoon",font=("Helvetica", 10))
+botaofake.grid(column=0,row=0,sticky="n",padx=10,pady=10)
+
+botaofakeconfi = ctk.CTkLabel(caixa_frame,text="config",font=("Helvetica", 10))
+botaofakeconfi.grid(column=1,row=0,sticky="n",padx=10,pady=10)
 
 janela.mainloop()
