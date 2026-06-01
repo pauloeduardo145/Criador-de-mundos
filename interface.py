@@ -1,5 +1,6 @@
 import customtkinter as ctk
-from widgets import mostrar_frame,criar_historia, ocultar_frame
+from historias import Historias
+from widgets import mostrar_frame,criar_historia, ocultar_frame,criar_label
 
 ctk.set_appearance_mode("dark")
 
@@ -18,14 +19,23 @@ janela.grid_rowconfigure(1,weight=1)
 frame_historia = ctk.CTkFrame(janela, width= 200,height=350)
 frame_historia.grid_propagate(False)
 frame_historia.grid_columnconfigure(0,weight=1)
-frame_historia.grid_rowconfigure(0,weight=1)
+frame_historia.grid_rowconfigure(0,weight=0)
+frame_historia.grid_rowconfigure(1, weight=0)
+frame_historia.grid_rowconfigure(2, weight=0)
+frame_historia.grid_rowconfigure(3, weight=0)
+frame_historia.grid_rowconfigure(4, weight=1)
 frame_historia.grid(column=0,row=1, padx=20,pady=10)
 
 menu = ctk.CTkLabel(frame_historia,text='HISTÓRIAS')
 menu.grid(column=0,row=0,sticky="n",padx=10,pady=10)
 
-button_base = ctk.CTkButton(frame_historia, text="Criar historias",command=lambda:mostrar_frame(frame_nomeh))
-button_base.grid(column=0,row=1,sticky="n",padx=10,pady=10)
+criah = ctk.CTkButton(frame_historia, text="[Criar historias]",command=lambda:mostrar_frame(frame_nomeh))
+criah.grid(column=0,row=4,sticky="s",padx=10,pady=10)
+
+#LABEL DO HISTORIA
+
+#label_des = ctk.CTkLabel(frame_historia, text="TEXTO")
+#label_des.grid(column=0, row=1,sticky="n",padx=10,pady=10)
 
 #INFORMAÇÕES
 
@@ -74,9 +84,11 @@ botaofake = ctk.CTkLabel(frame_nomeh,text="Criar historia")
 botaofake.grid(column=0,row=1,padx=10,pady=10)
 
 nome = ctk.CTkEntry(frame_nomeh)
-nome.grid(column=0,row=2)#columnspan=2)
+nome.grid(column=0,row=2)
 
-criar_h = ctk.CTkButton(frame_nomeh,text="Criar", command=lambda:(criar_historia(nome),ocultar_frame(frame_nomeh)) )
+criar_h = ctk.CTkButton(frame_nomeh,text="Criar", command=lambda:(criar_historia(nome.get),
+                    criar_label(nome.get(),frame_historia),
+                    ocultar_frame(frame_nomeh)))
 criar_h.grid(column=0,row=3,padx=10,pady=10,sticky="s")
 
 janela.mainloop()
