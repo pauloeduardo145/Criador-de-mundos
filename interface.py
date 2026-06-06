@@ -2,6 +2,8 @@ import customtkinter as ctk
 from widgets import mostrar_frame,criar_historia, ocultar_frame,criar_label
 ctk.set_appearance_mode("dark")
 
+historia_selecionada = None
+
 #JANELAS
 
 janela = ctk.CTk()
@@ -80,8 +82,16 @@ sp.grid(column=0,row=6,sticky="w",padx=10,pady=10)
 
 #RECEBER INFORMAÇÕES DA HISTORIA SELECIONADA 
 
+def selecionar_historia(historia):
+    global historia_selecionada
+    historia_selecionada = historia
 
-
+    nome_historia.configure(text=f"Nome: {historia['nome']}")
+    arcos.configure(text=f"Arcos: {len(historia['arcos'])}")
+    cap.configure(text=f"Capítulos: {len(historia['capitulos'])}")
+    pers.configure(text=f"Personagens: {len(historia['personagens'])}")
+    sp.configure(text=f"Sistemas P: {len(historia['sistemas_poder'])}")
+    print(type(historia))
 
 #CONTEUDO
 
@@ -118,12 +128,18 @@ frame_nomeh.place_forget()
 botaofake = ctk.CTkLabel(frame_nomeh,text="Criar historia")
 botaofake.grid(column=0,row=1,padx=10,pady=10)
 
+def ao_apertar_enter(event):
+    historia = criar_historia(nome.get())
+    criar_label(historia, frame_lista, selecionar_historia)
+    ocultar_frame(frame_nomeh)
+    
 nome = ctk.CTkEntry(frame_nomeh)
+nome.bind("<Return>", ao_apertar_enter)
 nome.grid(column=0,row=2)
 nome.focus()
 
 
-criar_h = ctk.CTkButton(frame_nomeh,text="Criar", command=lambda:(criar_historia(nome.get()),criar_label(nome.get(),frame_lista),ocultar_frame(frame_nomeh)))
+criar_h = ctk.CTkButton(frame_nomeh,text="Criar", command=lambda:(criar_label(criar_historia(nome.get()), frame_lista, selecionar_historia),ocultar_frame(frame_nomeh)))
 criar_h.grid(column=0,row=3,padx=10,pady=10,sticky="s")
 
 janela.mainloop()
