@@ -26,6 +26,21 @@ janela.grid_rowconfigure(1,weight=1)
 
 #CONTEUDO
 
+
+def carregar_interface():
+
+    for widget in frame_lista.winfo_children():
+        widget.destroy()
+
+    for indice, historia in enumerate(historias.Historias):
+
+        criar_label(
+            historia,
+            frame_lista,
+            selecionar_historia,
+            row=indice
+        )
+
 frame_conteudo = ctk.CTkFrame(janela)
 #frame_conteudo.grid_propagate(False)
 frame_conteudo.grid_columnconfigure(0,weight=1)
@@ -122,14 +137,30 @@ sp.grid(column=0,row=6,sticky="w",padx=10,pady=5)
 
 def selecionar_historia(historia):
     global historia_selecionada
+
     historia_selecionada = historia
 
     nome_historia.configure(text=f"Nome: {historia['nome']}")
+
     arcos.configure(text=f"Arcos: {len(historia['arcos'])}")
+
     cap.configure(text=f"Capítulos: {len(historia['capitulos'])}")
+
     pers.configure(text=f"Personagens: {len(historia['personagens'])}")
-    sp.configure(text=f"Sistemas P: {len(historia['sistemas_poder'])}")
-    print(historia["nome"])
+    
+    sp.configure(text=f"Sistemas P: {historia['sistemas_poder']}")
+
+    # Limpa os personagens exibidos
+    for widget in frame_lista_conteudo.winfo_children():
+        widget.destroy()
+
+    # Recria os personagens da história
+    for personagem in historia["personagens"]:
+        criar_label_personagem(
+            personagem,
+            frame_lista_conteudo,
+            selecionar_personagem
+        )
 
 def selecionar_personagem(personagem):
     global personagem_selecionado
@@ -163,8 +194,10 @@ botaofake = ctk.CTkLabel(frame_nomeh,text="Criar historia")
 botaofake.grid(column=0,row=1,padx=10,pady=10)
 
 def enter_historia(events):
-    historia = criar_historia(nome.get())
-    criar_label(historia, frame_lista, selecionar_historia)
+    criar_historia(nome.get())
+    print(historias.Historias)
+    print(len(historias.Historias))
+    carregar_interface()
     ocultar_frame(frame_nomeh)
 
 nome = ctk.CTkEntry(frame_nomeh)
@@ -172,7 +205,7 @@ nome.bind("<Return>", enter_historia)
 nome.grid(column=0,row=2)
 nome.focus()
 
-criar_h = ctk.CTkButton(frame_nomeh,text="Criar", command=lambda:(criar_label(criar_historia(nome.get()), frame_lista, selecionar_historia),ocultar_frame(frame_nomeh)))
+criar_h = ctk.CTkButton(frame_nomeh,text="Criar",command=lambda: (criar_historia(nome.get()),carregar_interface(),ocultar_frame(frame_nomeh),print(historias.Historias),print(len(historias.Historias))))
 criar_h.grid(column=0,row=3,padx=10,pady=10,sticky="s")
 
 #JANELA CRIAR PERSONAGEM
@@ -195,14 +228,7 @@ def salvar_personagem():
         ocultar_frame(janepers)
 
 def enter_personagem(event):
-    novo = criar_personagem(historia_selecionada,personame.get())
-    selecionar_historia(historia_selecionada)
-    ocultar_frame(janepers)
-    criar_label_personagem(
-            novo,
-            frame_lista_conteudo,
-            selecionar_personagem
-        )
+    salvar_personagem()
 
 
 janepers = ctk.CTkFrame(janela,width=600,height=400)
@@ -228,5 +254,6 @@ personame.focus()
 salvarperso = ctk.CTkButton(janepers,text="[Salvar Personagem]",command=lambda: salvar_personagem())
 salvarperso.grid(column=1,row=4)
 
+carregar_interface()
 
 janela.mainloop()
