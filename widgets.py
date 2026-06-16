@@ -7,6 +7,10 @@ def mostrar_frame(frame):
 
 def criar_historia(texto):
 
+    if not texto.strip():
+        print("Digite um nome.")
+        return
+
     for h in historias.Historias:
         if h["nome"] == texto:
             print("Já existe uma história com esse nome.")
@@ -38,14 +42,18 @@ def criar_label(nova_historia, frame_historia, callback=None, row=0):
 
 def criar_personagem(historia,nome):
 
-    for p in historia["personagens"]:
-        if p["nome"] == nome:
-            print("Já existe um personagem com esse nome.")
-            return p 
+    if not nome.strip():
+        print("Digite um nome.")
+        return
 
     if historia is None:
         print("Selecione uma história primeiro")
         return
+
+    for p in historia["personagens"]:
+        if p["nome"] == nome:
+            print("Já existe um personagem com esse nome.")
+            return p 
 
     import uuid
 
@@ -82,3 +90,37 @@ def criar_label_personagem(personagem, frame, callback=None):
     botao.pack(pady=3)
 
     return botao
+
+def criar_label_capitulo(capitulo,frame,callback=None):
+    botao = ctk.CTkButton(
+        frame,
+        text=capitulo["nome"],
+        command=lambda:
+            callback(capitulo)
+            if callback else None
+    )
+
+    botao.pack(pady=3)
+
+    return botao
+
+def criar_capitulo(historia,nome):
+
+    if not nome.strip():
+        print("Digite um nome.")
+        return
+
+    if historia is None:
+        print("Selecione uma história primeiro")
+        return
+
+    novo_capitulo = {
+        "nome": nome,
+        "imagens": "",
+        "relacoes": ""
+    }
+
+    historia["capitulos"].append(novo_capitulo)
+    historias.atualizar()
+    return novo_capitulo
+

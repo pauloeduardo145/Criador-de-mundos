@@ -1,11 +1,13 @@
 import customtkinter as ctk
-from widgets import mostrar_frame,criar_historia, ocultar_frame,criar_label,criar_personagem,criar_label_personagem
+from widgets import mostrar_frame,criar_historia, ocultar_frame,criar_label,criar_personagem,criar_label_personagem, criar_capitulo,criar_label_capitulo
 import historias
 
 ctk.set_appearance_mode("dark")
 
 historia_selecionada = None
+capitulo_selecionado = None
 personagem_selecionado = None
+
 
 def histOria(frame):
     if historia_selecionada is None:
@@ -60,11 +62,13 @@ frame_lista_conteudo._scrollbar.configure(height=0)
 
 #CONTEUDO DO HISTORIA
 
-Addper = ctk.CTkButton(frame_conteudo,height=15,text="[Criar Personagem]",command=lambda:histOria(janepers))
+Addper = ctk.CTkButton(frame_conteudo,height=15,text="[Criar Personagem]",
+                       command=lambda:histOria(janepers))
 Addper.grid(column=0,row=2,sticky="w",padx=10,pady=10)
 
-Addarc = ctk.CTkButton(frame_conteudo,height=15,text="[Criar Arco]",command=lambda:histOria())
-Addarc.grid(column=1,row=2,sticky="w",padx=10,pady=10)
+capitadic = ctk.CTkButton(frame_conteudo,height=15,text="[Criar Arco]",
+                          command=lambda:histOria(janecapi))
+capitadic.grid(column=1,row=2,sticky="w",padx=10,pady=10)
 
 #HISTORIAS
 
@@ -80,7 +84,8 @@ frame_historia.grid(column=0,row=1, padx=10,pady=5)
 menu = ctk.CTkLabel(frame_historia,text='HISTÓRIAS')
 menu.grid(column=0,row=0,sticky="n",padx=10,pady=5)
 
-criah = ctk.CTkButton(frame_historia, text="[Criar historias]",command=lambda:mostrar_frame(frame_nomeh))
+criah = ctk.CTkButton(frame_historia, text="[Criar historias]",
+                      command=lambda:mostrar_frame(frame_nomeh))
 criah.grid(column=0,row=2,sticky="s",padx=10,pady=6)
 
 #LABEL DO HISTORIA
@@ -169,6 +174,13 @@ def selecionar_personagem(personagem):
 
     print(personagem["nome"])
 
+def selecionar_capitulo(capitulo):
+    global capitulo_selecionado
+
+    capitulo_selecionado = capitulo
+
+    print(capitulo["nome"])
+
 #CAIXA
 
 caixa_frame = ctk.CTkFrame(janela,width= 200,height=20)
@@ -250,9 +262,54 @@ personame.bind("<Return>", enter_personagem)
 personame.grid(column=1,row=1)
 personame.focus()
 
-
 salvarperso = ctk.CTkButton(janepers,text="[Salvar Personagem]",command=lambda: salvar_personagem())
 salvarperso.grid(column=1,row=4)
+
+#JANELA CRIAR CAPITULO
+
+def salvar_capitulo():
+
+    if historia_selecionada is None:
+        print("Nenhuma história selecionada")
+        return
+
+    novo = criar_capitulo(
+        historia_selecionada,
+        capiname.get()
+    )
+
+    if novo:
+
+        criar_label_capitulo(
+            novo,
+            frame_lista_conteudo,
+            selecionar_capitulo
+        )
+
+        selecionar_capitulo(novo)
+
+        ocultar_frame(janecapi)
+
+janecapi = ctk.CTkFrame(janela,width=600,height=400)
+janecapi.grid_propagate(False)
+janecapi.grid_columnconfigure(0, weight=1)
+janecapi.grid_columnconfigure(1, weight=1)
+janecapi.grid_rowconfigure(0,weight=0)
+janecapi.grid_rowconfigure(1,weight=0)
+
+janecapi.place(relx=0.5, rely=0.5, anchor="center")
+janecapi.place_forget()
+
+capi = ctk.CTkLabel(janecapi,text="Insira abaixo o nome do personagem")
+capi.grid(column=1,row=0)
+
+capiname = ctk.CTkEntry(janecapi)
+capiname.focus()
+capiname.bind("<Return>", None)
+capiname.grid(column=1,row=1)
+
+salvarcapit = ctk.CTkButton(janecapi,text="[Criar Capitulo]",command=lambda: salvar_capitulo())
+salvarcapit.grid(column=1,row=4)
 
 carregar_interface()
 
