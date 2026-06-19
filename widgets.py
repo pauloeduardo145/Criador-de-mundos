@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import historias
+from modelos import nova_historia, novo_personagem, novo_capitulo
 
 def mostrar_frame(frame):
     frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -14,21 +15,17 @@ def criar_historia(texto):
     for h in historias.Historias:
         if h["nome"] == texto:
             print("Já existe uma história com esse nome.")
-            return h 
+            return h
 
-    nova_historia =  {
-        "nome": texto,
-        "imagem": "",
-        "arcos": [],
-        "capitulos": [],
-        "personagens": [],
-        "sistemas_poder": []
-    } 
+    historia = nova_historia(texto)
 
-    historias.Historias.append(nova_historia)
+    historias.Historias.append(historia)
+
     print(historias.Historias)
-    historias.atualizar()  
-    return nova_historia
+
+    historias.atualizar()
+
+    return historia
 
 def ocultar_frame(frame):
     frame.place_forget()
@@ -40,7 +37,7 @@ def criar_label(nova_historia, frame_historia, callback=None, row=0):
 
     return label
 
-def criar_personagem(historia,nome):
+def criar_personagem(historia, nome):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -53,29 +50,15 @@ def criar_personagem(historia,nome):
     for p in historia["personagens"]:
         if p["nome"] == nome:
             print("Já existe um personagem com esse nome.")
-            return p 
+            return p
 
-    import uuid
+    personagem = novo_personagem(nome, historia)
 
+    historia["personagens"].append(personagem)
 
-    novo_id = str(uuid.uuid4())
-
-    novo_personagem = {
-        "nome": nome,
-        "id": novo_id,
-        "imagens": "", 
-        "historia_id": historia["nome"],
-        "personalidade": "",
-        "aparencia": "",
-        "relacoes": "",
-        "poderes": ""
-    }
-
-    historia["personagens"].append(novo_personagem)
     historias.atualizar()
-    return novo_personagem
 
-
+    return personagem
 
 def criar_label_personagem(personagem, frame, callback=None):
 
@@ -104,7 +87,7 @@ def criar_label_capitulo(capitulo,frame,callback=None):
 
     return botao
 
-def criar_capitulo(historia,nome):
+def criar_capitulo(historia,nome,conteudo):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -114,13 +97,14 @@ def criar_capitulo(historia,nome):
         print("Selecione uma história primeiro")
         return
 
-    novo_capitulo = {
-        "nome": nome,
-        "imagens": "",
-        "relacoes": ""
-    }
+    capitulo = novo_capitulo(nome,conteudo)
 
-    historia["capitulos"].append(novo_capitulo)
+    historia["capitulos"].append(capitulo)
+
     historias.atualizar()
-    return novo_capitulo
 
+    return capitulo
+
+def oculta_e_mostra_frame(frame_A, frame_B):
+    frame_A.place_forget()
+    frame_B.lift()

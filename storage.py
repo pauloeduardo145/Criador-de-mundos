@@ -1,5 +1,6 @@
 import json
 import os
+from modelos import nova_historia
 
 PASTA = os.path.join(
      os.path.expanduser("~"),
@@ -24,5 +25,12 @@ def carregar_dados():
         return[]
     
 def salvar_dados(dados):
-        with open(ARQUIVO, "w",encoding="utf-8") as f:
-             json.dump(dados,f,ensure_ascii=False,indent=4)
+
+    try:
+        with open(ARQUIVO, "w", encoding="utf-8") as f:
+            json.dump(dados, f, ensure_ascii=False, indent=4)
+
+    except Exception as erro:
+        print(type(erro))
+        print(erro)
+        print(dados)
