@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import historias
-from modelos import nova_historia, novo_personagem, novo_capitulo
+from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder
 
 def mostrar_frame(frame):
     frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -36,6 +36,28 @@ def criar_label(nova_historia, frame_historia, callback=None, row=0):
     label.grid(column=0,row=row,sticky="ew",pady=3)
 
     return label
+
+def criar_poderes(historia,nome):
+    if not nome.strip():
+        print("Digite um nome.")
+        return
+    
+    if historia is None:
+        print("Selecione uma história primeiro")
+        return
+
+    for sp in historia["sistemas_poder"]:
+        if sp["nome"] == nome:
+            print("Já existe um sistema de poder com esse nome.")
+            return sp
+
+    sistemapoder = novo_sistemapoder(nome)
+
+    historia["sistemas_poder"].append(sistemapoder)
+
+    historias.atualizar()
+
+    return sistemapoder
 
 def criar_personagem(historia, nome):
 
@@ -104,7 +126,3 @@ def criar_capitulo(historia,nome,conteudo):
     historias.atualizar()
 
     return capitulo
-
-def oculta_e_mostra_frame(frame_A, frame_B):
-    frame_A.place_forget()
-    frame_B.lift()

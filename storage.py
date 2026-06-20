@@ -8,6 +8,7 @@ PASTA = os.path.join(
      "Criador de Mundos"
 )
 
+
 os.makedirs(PASTA, exist_ok=True)
 
 ARQUIVO = os.path.join(

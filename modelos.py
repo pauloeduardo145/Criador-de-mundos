@@ -10,11 +10,11 @@ def nova_historia(nome):
         "sistemas_poder": []
     }
 
-def novo_personagem(nome, historia):
+def novo_personagem(nome, historia,caminho_imagem):
     return {
         "nome": nome,
         "id": str(uuid.uuid4()),
-        "imagens": "",
+        "imagens": caminho_imagem,
         "historia_id": historia["nome"],
         "personalidade": "",
         "aparencia": "",
@@ -29,3 +29,10 @@ def novo_capitulo(nome,conteudo):
         "relacoes": "",
         "conteudo": conteudo
     }
+
+def novo_sistemapoder(nome):
+    return {
+    "nome": nome,
+    "descricao": "",
+    "regras": ""
+}
