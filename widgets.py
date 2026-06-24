@@ -37,29 +37,7 @@ def criar_label(nova_historia, frame_historia, callback=None, row=0):
 
     return label
 
-def criar_poderes(historia,nome):
-    if not nome.strip():
-        print("Digite um nome.")
-        return
-    
-    if historia is None:
-        print("Selecione uma história primeiro")
-        return
-
-    for sp in historia["sistemas_poder"]:
-        if sp["nome"] == nome:
-            print("Já existe um sistema de poder com esse nome.")
-            return sp
-
-    sistemapoder = novo_sistemapoder(nome)
-
-    historia["sistemas_poder"].append(sistemapoder)
-
-    historias.atualizar()
-
-    return sistemapoder
-
-def criar_personagem(historia, nome):
+def criar_personagem(historia,nome,imagem,personalidade,aparencia,his,relacoes,poderes,hab):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -74,7 +52,7 @@ def criar_personagem(historia, nome):
             print("Já existe um personagem com esse nome.")
             return p
 
-    personagem = novo_personagem(nome, historia)
+    personagem = novo_personagem(nome, historia,imagem,personalidade,aparencia,his,relacoes,poderes,hab)
 
     historia["personagens"].append(personagem)
 
@@ -126,3 +104,31 @@ def criar_capitulo(historia,nome,conteudo):
     historias.atualizar()
 
     return capitulo
+
+def criar_label_sistema_poder(nome, frame, callback=None):
+
+    botao = ctk.CTkButton(
+        frame,
+        text=nome["nome"],
+        command=lambda:
+            callback(nome)
+            if callback else None
+    )
+
+    botao.pack(pady=3)
+
+    return botao
+
+def criar_sistemadepoder(historia,nome,descricao,regras,vantagens,fraquezas):
+
+    if historia is None:
+        print("Nenhuma história selecionada")
+        return
+
+    sistemapoder = novo_sistemapoder(nome,historia,descricao,regras,vantagens,fraquezas)
+
+    historia["sistemas_poder"].append(sistemapoder)
+
+    historias.atualizar()
+
+    return sistemapoder

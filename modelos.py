@@ -3,23 +3,27 @@ import uuid
 def nova_historia(nome):
     return {
         "nome": nome,
+        "id":str(uuid.uuid4()),
         "imagem": "",
+        "ultima_edicao": "",
         "arcos": [],
         "capitulos": [],
         "personagens": [],
         "sistemas_poder": []
     }
 
-def novo_personagem(nome, historia,caminho_imagem):
+def novo_personagem(nome, historia,caminho_imagem,personalidade,aparencia,his,relacoes,poderes,hab):
     return {
         "nome": nome,
         "id": str(uuid.uuid4()),
         "imagens": caminho_imagem,
-        "historia_id": historia["nome"],
-        "personalidade": "",
-        "aparencia": "",
-        "relacoes": "",
-        "poderes": ""
+        "historia_id": historia["id"],
+        "personalidade": personalidade,
+        "aparencia": aparencia,
+        "historia": his,
+        "relacoes": relacoes,
+        "poderes": poderes,
+        "habilidades": hab
     }
 
 def novo_capitulo(nome,conteudo):
@@ -30,9 +34,17 @@ def novo_capitulo(nome,conteudo):
         "conteudo": conteudo
     }
 
-def novo_sistemapoder(nome):
+def novo_sistemapoder(nome,historia,descricao,regras,vantagens,fraquezas):
     return {
+    "id": str(uuid.uuid4()),
+    "historia_id":historia["id"],
     "nome": nome,
-    "descricao": "",
-    "regras": ""
+    "descricao": descricao,
+    "regras": regras,
+    "vantagens": vantagens,
+    "fraquezas": fraquezas,
+    "exemplos": []
 }
+
+#sistema = novo_sistemapoder("Abelha")
+#print(sistema["id"])
