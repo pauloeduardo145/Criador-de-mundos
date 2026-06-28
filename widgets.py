@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import historias
-from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder
+from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao
 
 def mostrar_frame(frame):
     frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -37,7 +37,7 @@ def criar_label(nova_historia, frame_historia, callback=None, row=0):
 
     return label
 
-def criar_personagem(historia,nome,imagem,personalidade,aparencia,his,relacoes,poderes,hab):
+def criar_personagem(historia,nome,imagem,personalidade,aparencia,his,relacoes,poderes,fraq,hab):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -52,7 +52,7 @@ def criar_personagem(historia,nome,imagem,personalidade,aparencia,his,relacoes,p
             print("Já existe um personagem com esse nome.")
             return p
 
-    personagem = novo_personagem(nome, historia,imagem,personalidade,aparencia,his,relacoes,poderes,hab)
+    personagem = novo_personagem(nome, historia,imagem,personalidade,aparencia,his,relacoes,poderes,fraq,hab)
 
     historia["personagens"].append(personagem)
 
@@ -105,6 +105,17 @@ def criar_capitulo(historia,nome,conteudo):
 
     return capitulo
 
+def criar_galeria(historia,personagem,caminho,descricao):
+    
+    if historia is None:
+        return
+    
+    galeria = nova_imagem_galeria(caminho,descricao)
+
+    personagem["galeria"].append(galeria)
+
+    return galeria
+
 def criar_label_sistema_poder(nome, frame, callback=None):
 
     botao = ctk.CTkButton(
@@ -132,3 +143,31 @@ def criar_sistemadepoder(historia,nome,descricao,regras,vantagens,fraquezas):
     historias.atualizar()
 
     return sistemapoder
+
+def criar_label_obs(nome, frame, callback=None):
+
+    obs = ctk.CTkButton(
+        frame,
+        text=nome["nome"],
+        command=lambda:
+            callback(nome)
+            if callback else None
+    )
+
+    obs.pack(pady=3)
+
+    return obs
+
+def criar_observacoes(historia,nome,relacao,conteudo):
+
+    if historia is None:
+        print("Nenhuma história selecionada")
+        return
+
+    observacao = nova_observacao(nome,relacao,conteudo)
+
+    historia["observacoes"].append(observacao)
+
+    historias.atualizar()
+
+    return observacao
