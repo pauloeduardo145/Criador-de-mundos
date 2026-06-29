@@ -9,6 +9,7 @@ import shutil
 import os
 import storage
 from tkinter import messagebox
+import platform
 
 ctk.set_appearance_mode("dark")
 
@@ -77,7 +78,7 @@ conteudo.grid(column=0,row=0,columnspan=5, sticky="n",padx=5,pady=5)
 
 frame_lista_conteudo = ctk.CTkScrollableFrame(frame_conteudo,width=600,height=520,orientation="vertical")
 frame_lista_conteudo.grid(column=0,row=2,columnspan=5, sticky="nsew",padx=10)
-frame_lista_conteudo._scrollbar.configure(height=0)
+#frame_lista_conteudo._scrollbar.configure(height=0)
 
 #CONTEUDO DO HISTORIA
 
