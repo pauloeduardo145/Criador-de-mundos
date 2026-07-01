@@ -22,7 +22,7 @@ personagem_selecionado = None
 sistema_de_poder_selecionado = None
 observacao_selecionada = None
 caminho_imagem = None
-
+galeria_imagens = None
 
 def histOria(frame):
     if historia_selecionada is None:
@@ -160,6 +160,45 @@ sp.grid(column=0,row=5,sticky="w",padx=10,pady=5)
 
 #MOSTRAR NO CONTEUDO
 
+def mostrar_cards_com_imagem(frame,itens,callback,chave_imagem="imagens",chave_nome="nome",tamanho=150):
+
+    grid = ctk.CTkFrame(frame, fg_color="transparent")
+    grid.pack(fill="both", expand=True, padx=20)
+
+    for indice, item in enumerate(itens):
+
+        linha = indice // 4
+        coluna = indice % 4
+
+        try:
+            img_ctk = mostrar_imagem(item[chave_imagem], tamanho)
+
+            card = ctk.CTkFrame(grid)
+            card.grid(
+                row=linha,
+                column=coluna,
+                padx=10,
+                pady=10
+            )
+
+            foto = ctk.CTkLabel(
+                card,
+                image=img_ctk,
+                text=""
+            )
+            foto.image = img_ctk
+            foto.pack(pady=5)
+
+            botao = ctk.CTkButton(
+                card,
+                text=item[chave_nome],
+                command=lambda i=item: navegar(callback, i)
+            )
+            botao.pack(pady=5)
+
+        except Exception as erro:
+            print(f"Erro ao carregar {item[chave_nome]}: {erro}")
+
 def mostrar_no_conteudo(frame, itens, callback, chave_nome):
 
     grid = ctk.CTkFrame(frame, fg_color="transparent")
@@ -261,26 +300,7 @@ def mostrar_todos_personagens():
     titulo = ctk.CTkLabel(frame_lista_conteudo,text=f"📂 Todos os Personagens ({len(personagens)})",font=("Helvetica", 18, "bold"))
     titulo.pack(pady=10, anchor="w", padx=20)
 
-    # 3. Cria um frame interno para organizar os personagens em grade (grid)
-    # Isso evita que vire uma linha vertical gigante de 500 itens
-    grid_personagens = ctk.CTkFrame(frame_lista_conteudo, fg_color="transparent")
-    grid_personagens.pack(fill="both", expand=True, padx=20)
-
-    # Configura o grid para ter, por exemplo, 4 colunas adaptáveis
-    for i in range(4):
-        grid_personagens.grid_rowconfigure(i, weight=1)
-
-    # 4. Varre os 500 personagens usando o loop 'for'
-    for indice, personagem in enumerate(historia_selecionada["personagens"]):
-        # Calcula a linha e a coluna no grid com base no índice (ex: 4 por linha)
-        linha = indice // 4
-        coluna = indice % 4
-
-        # Cria um pequeno card/botão para cada personagem
-        botao_card = ctk.CTkButton(grid_personagens,text=personagem["nome"],height=40,
-        # Usamos uma função lambda para que, ao clicar, abra a ficha dele
-        command=lambda p=personagem: navegar(selecionar_personagem, p))
-        botao_card.grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
+    mostrar_no_conteudo(frame_lista_conteudo,personagens,selecionar_personagem,"nome")
 
 def mostrar_todos_capitulos():
     if historia_selecionada is None:
@@ -301,32 +321,10 @@ def mostrar_todos_capitulos():
     )
     titulo.pack(pady=10, anchor="w", padx=20)
 
-    # 3. Cria um frame interno para organizar os personagens em grade (grid)
-    # Isso evita que vire uma linha vertical gigante de 500 itens
-    grid_capitulos = ctk.CTkFrame(frame_lista_conteudo, fg_color="transparent")
-    grid_capitulos.pack(fill="both", expand=True, padx=20)
-
-    # Configura o grid para ter, por exemplo, 4 colunas adaptáveis
-    for i in range(4):
-        grid_capitulos.grid_rowconfigure(i, weight=1)
-
-    # 4. Varre os 500 personagens usando o loop 'for'
-    for indice, capitulo in enumerate(historia_selecionada["capitulos"]):
-        # Calcula a linha e a coluna no grid com base no índice (ex: 4 por linha)
-        linha = indice // 4
-        coluna = indice % 4
-
-        # Cria um pequeno card/botão para cada personagem
-        botao_card = ctk.CTkButton(
-            grid_capitulos,
-            text=capitulo["nome"],
-            height=40,
-            # Usamos uma função lambda para que, ao clicar, abra a ficha dele
-            command=lambda c=capitulo: navegar(selecionar_capitulo, c) 
-        )
-        botao_card.grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
+    mostrar_no_conteudo(frame_lista_conteudo,capitulo,selecionar_capitulo,"nome")
 
 def mostrar_todas_imagens():
+
     if historia_selecionada is None:
         print("Nenhuma história selecionada")
         return
@@ -346,49 +344,7 @@ def mostrar_todas_imagens():
     )
     titulo.pack(pady=10, anchor="w", padx=20)
 
-    grid_imagens = ctk.CTkFrame(
-        frame_lista_conteudo,
-        fg_color="transparent"
-    )
-    grid_imagens.pack(fill="both", expand=True, padx=20)
-
-    for indice, personagem in enumerate(personagens_com_imagem):
-
-        linha = indice // 4
-        coluna = indice % 4
-
-        try:
-            img_ctk = mostrar_imagem(personagem["imagens"],150)
-
-            card = ctk.CTkFrame(grid_imagens)
-            card.grid(
-                row=linha,
-                column=coluna,
-                padx=10,
-                pady=10
-            )
-
-            foto = ctk.CTkLabel(
-                card,
-                image=img_ctk,
-                text=""
-            )
-            foto.image = img_ctk
-            foto.pack(pady=5)
-
-            nome = ctk.CTkButton(
-                card,
-                text=personagem["nome"],
-                command=lambda p=personagem:
-                navegar(selecionar_personagem, p)
-            )
-            nome.pack(pady=5)
-
-        except Exception as erro:
-            print(
-                f"Erro ao carregar imagem de "
-                f"{personagem['nome']}: {erro}"
-            )
+    mostrar_cards_com_imagem(frame_lista_conteudo,personagens_com_imagem,selecionar_personagem)
 
 #SELECIONAR ...
 
@@ -786,7 +742,7 @@ def abrir_galeria_personagem(personagem):
             caminho = item
             descricao = ""
 
-        descricao = item.get("descricao", "")
+            descricao = item.get("descricao", "")
 
         try:
             img_ctk = mostrar_imagem(caminho,200)
@@ -1103,8 +1059,7 @@ f.grid(column=0,row=3,padx=5)
 #JANELA CRIAR PERSONAGEM (ESTA CONCLUIDO).
 
 def salvar_personagem():
-
-    caminho_imagem = None
+    global caminho_imagem
 
     if historia_selecionada is None:
         print("Nenhuma história selecionada")
@@ -1123,6 +1078,11 @@ def salvar_personagem():
     fraquezas.get("1.0","end-1c"),
     habpertex.get("1.0","end-1c")
     )
+
+    if galeria_imagens is not None:
+        novo["galeria"] = galeria_imagens.copy()
+    else:
+        novo["galeria"] = []
 
     if caminho_imagem:
         extensao = os.path.splitext(caminho_imagem)[1]
@@ -1159,7 +1119,7 @@ janepers.place(relx=0.5, rely=0.5, anchor="center")
 janepers.place_forget()
 
 def imagem():
-    caminho_imagem = None
+    global caminho_imagem
 
     caminho_imagem = filedialog.askopenfilename(title="Selecione uma imagem",filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),("Todos os arquivos", "*.*")])
 
@@ -1172,25 +1132,52 @@ def imagem():
     preview.image = img_ctk
 
 def adicionar_imagem():
-    galeria_imagens = None
-    caminho_imagem = None
     galeria_imagens.append(caminho_imagem)
 
 def galeria():
-    galeria_imagens = []
+    global galeria_imagens
 
-    galeria_imagens = filedialog.askopenfilename(title="Selecione uma imagem",filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),("Todos os arquivos", "*.*")])
+    caminho = filedialog.askopenfilename(
+        title="Selecione uma imagem",
+        filetypes=[
+            ("Imagens", "*.png *.jpg *.jpeg *.webp"),
+            ("Todos os arquivos", "*.*")
+        ]
+    )
 
-    if not galeria_imagens:
+    if not caminho:
         return
 
-    img_ctk = mostrar_imagem(galeria_imagens,250)
+    janela_desc = ctk.CTkInputDialog(
+        text="Digite a descrição da imagem:",
+        title="Descrição da Galeria"
+    )
 
-    preview.configure(image=img_ctk, text="")
-    preview.image = img_ctk
+    descricao = janela_desc.get_input()
 
-    addimag = ctk.CTkButton(frame_lista_conteudo, text="Imagem",command=lambda: adicionar_imagem())
-    addimag.pack(pady=5)
+    if descricao is None:
+        descricao = ""
+
+    extensao = os.path.splitext(caminho)[1]
+
+    nome_arquivo = f"{uuid.uuid4()}{extensao}"
+
+    novo_caminho = os.path.join(
+        storage.PASTA_GALERIA,
+        nome_arquivo
+    )
+
+    shutil.copy2(caminho, novo_caminho)
+
+    if galeria_imagens is None:
+        galeria_imagens = []
+
+    galeria_imagens.append({
+        "caminho": novo_caminho,
+        "descricao": descricao
+    })
+
+    print(galeria_imagens)
 
 preview = ctk.CTkLabel(janepers,text="[Clique para importar imagem principal]")
 preview.grid(column=0, row=1, rowspan=3)
@@ -1341,30 +1328,7 @@ def mostrar_todos_sistemas_poder():
     )
     titulo.pack(pady=10, anchor="w", padx=20)
 
-    # 3. Cria um frame interno para organizar os personagens em grade (grid)
-    # Isso evita que vire uma linha vertical gigante de 500 itens
-    grid_sistem = ctk.CTkFrame(frame_lista_conteudo, fg_color="transparent")
-    grid_sistem.pack(fill="both", expand=True, padx=20)
-
-    # Configura o grid para ter, por exemplo, 4 colunas adaptáveis
-    for i in range(4):
-        grid_sistem.grid_rowconfigure(i, weight=1)
-
-    # 4. Varre os 500 personagens usando o loop 'for'
-    for indice, sistemapoder in enumerate(historia_selecionada["sistemas_poder"]):
-        # Calcula a linha e a coluna no grid com base no índice (ex: 4 por linha)
-        linha = indice // 6
-        coluna = indice % 6
-
-        # Cria um pequeno card/botão para cada personagem
-        botao_card = ctk.CTkButton(
-            grid_sistem,
-            text=sistemapoder["nome"],
-            height=40,
-            # Usamos uma função lambda para que, ao clicar, abra a ficha dele
-            command=lambda s=sistemapoder: navegar(selecionar_sistemapoder, s) 
-        )
-        botao_card.grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
+    mostrar_no_conteudo(frame_lista_conteudo,historia_selecionada["sistemas_poder"],sistema_de_poder_selecionado,"nome")
 
 def selecionar_sistemapoder(sistemapode):
     global sistema_de_poder_selecionado
@@ -1595,8 +1559,6 @@ def mostrar_todas_observacoes():
         )
 
         botao_card.grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
-
-
 
 janeobser = ctk.CTkFrame(janela, width=600, height=500)
 janeobser.grid_propagate(False)
