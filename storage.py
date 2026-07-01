@@ -82,7 +82,7 @@ def salvar_dados(dados):
         print(f"Backup criado com sucesso: {nome_backup}.zip")
         
         # 3. Limpa backups antigos
-        limpar_backups_antigos(30)
+        limpar_backups_antigos(10)
 
     except Exception as erro:
         print(f"Erro ao criar backup: {erro}")

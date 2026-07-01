@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import historias
 from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao
+from PIL import Image
 
 def mostrar_frame(frame):
     frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -158,16 +159,23 @@ def criar_label_obs(nome, frame, callback=None):
 
     return obs
 
-def criar_observacoes(historia,nome,relacao,conteudo):
+def criar_observacoes(historia,nome,titulo,conteudo):
 
     if historia is None:
         print("Nenhuma história selecionada")
         return
 
-    observacao = nova_observacao(nome,relacao,conteudo)
+    observacao = nova_observacao(nome,titulo,conteudo)
 
     historia["observacoes"].append(observacao)
 
     historias.atualizar()
 
     return observacao
+
+def mostrar_imagem(caminho,tamanho):
+    imagem_pil = Image.open(caminho)
+    imagem_pil.thumbnail((tamanho,tamanho))
+    img_ctk = ctk.CTkImage(light_image=imagem_pil,dark_image=imagem_pil,size=(imagem_pil.width, imagem_pil.height))
+
+    return img_ctk

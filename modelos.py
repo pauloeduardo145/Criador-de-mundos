@@ -34,10 +34,10 @@ def nova_imagem_galeria(caminho, descricao):
         "descricao": descricao
     }
 
-def nova_observacao(nome,relacao,conteudo):
+def nova_observacao(nome,titulo,conteudo):
     return{
         "nome": nome,
-        "relacao": relacao,
+        "titulo": titulo,
         "conteudo": conteudo
     }
 
