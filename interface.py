@@ -8,7 +8,6 @@ import shutil
 import os
 import storage
 from tkinter import messagebox
-import platform
 
 ctk.set_appearance_mode("dark")
 
@@ -167,8 +166,8 @@ def mostrar_cards_com_imagem(frame,itens,callback,chave_imagem="imagens",chave_n
 
     for indice, item in enumerate(itens):
 
-        linha = indice // 4
-        coluna = indice % 4
+        linha = indice // 6
+        coluna = indice % 6
 
         try:
             img_ctk = mostrar_imagem(item[chave_imagem], tamanho)
@@ -243,7 +242,12 @@ def selecionar_historia(historia):
 
     nome_historia.configure(text=f"Nome: {historia['nome']}")
 
-    cap.configure(text=f"Capítulos: {len(historia['capitulos'])}")
+    qtd = len(historia['capitulos'])
+
+    if qtd == 1:
+        cap.configure(text=f"Capítulo: {qtd}")
+    else:
+        cap.configure(text=f"Capítulos: {qtd}")
 
     ue.configure(text=f"UE: {historia.get('ultima_edicao', 'Nunca')}")
 
@@ -454,9 +458,31 @@ def edicao_capitulo():
     nome.insert(0,capitulo_selecionado["nome"])
     nome.pack(fill="x",padx=10,pady=5)
 
-    conteudos = ctk.CTkTextbox(frame_lista_conteudo,height=100)
+    def ajustar_altura(event=None):
+        widget = conteudos
+
+        # Atualiza o layout
+        widget.update_idletasks()
+
+        # Quantidade de linhas
+        linhas = int(widget.index("end-1c").split(".")[0])
+
+        # Ajusta a altura
+        widget.configure(height=max(40, linhas * 20 + 2))
+
+        # Limpa a flag de modificação
+        widget.edit_modified(False)
+
+    conteudos = ctk.CTkTextbox(frame_lista_conteudo, wrap="word")
+    conteudos.pack(fill="x", padx=10, pady=5)
+
     conteudos.insert("1.0", capitulo_selecionado["conteudo"])
-    conteudos.pack(fill="x",padx=10,pady=5)
+
+    # Ajusta a altura inicial
+    ajustar_altura()
+
+    # Sempre que o texto for alterado
+    conteudos.bind("<<Modified>>", ajustar_altura)
 
     def salvar_edicao():
         capitulo_selecionado["nome"] = nome.get()
@@ -723,7 +749,7 @@ def abrir_galeria_personagem(personagem):
 
     # IMAGEM PRINCIPAL
     if personagem.get("imagens"):
-        img_ctk = mostrar_imagem(personagem_selecionado["imagens"],250)
+        img_ctk = mostrar_imagem(personagem["imagens"],250)
 
         label = ctk.CTkLabel(frame_lista_conteudo, image=img_ctk, text="")
         label.image = img_ctk
@@ -1180,12 +1206,8 @@ def galeria():
     print(galeria_imagens)
 
 preview = ctk.CTkLabel(janepers,text="[Clique para importar imagem principal]")
-preview.grid(column=0, row=1, rowspan=3)
+preview.grid(column=0, row=3, rowspan=3)
 preview.bind("<Button-1>", lambda e: imagem())
-
-gale = ctk.CTkLabel(janepers,text="[Galeria de imagens]")
-gale.grid(column=0, row=4, rowspan=3)
-gale.bind("<Button-1>", lambda e: galeria())
 
 perso = ctk.CTkLabel(janepers,text="Nome: ")
 perso.grid(column=1,row=0)
@@ -1275,6 +1297,7 @@ def salvar_capitulo():
         selecionar_capitulo(novo)
 
         ocultar_frame(janecapi)
+        selecionar_historia(historia_selecionada)
         print(capiconteudo.get("1.0", "end-1c"))
 
 janecapi = ctk.CTkFrame(janela,width=300,height=220)
@@ -1636,7 +1659,10 @@ botao_obser.grid(column=7,row=0,sticky="n",padx=5,pady=5)
 botao_excluir= ctk.CTkButton(lista_conteudo,text="Excluir",command=lambda: excluir_item())
 botao_excluir.grid(column=8,row=0,sticky="n",padx=5,pady=5)
 
-carregar_interface()
+#ATALHOS
 
+janela.bind("<F5>", lambda e: selecionar_historia(historia_selecionada))
+
+carregar_interface()
 
 janela.mainloop()

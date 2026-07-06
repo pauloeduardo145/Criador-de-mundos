@@ -44,7 +44,6 @@ def nova_observacao(nome,titulo,conteudo):
 def novo_capitulo(nome,conteudo):
     return {
         "nome": nome,
-        "relacoes": "",
         "conteudo": conteudo
     }
 
