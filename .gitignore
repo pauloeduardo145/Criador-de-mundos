@@ -1,3 +1,16 @@
+# Ambiente virtual
 venv/
+.venv/
+
+# Cache do Python
 __pycache__/
 *.pyc
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# IDE
+.vscode/
+.idea/

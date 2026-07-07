@@ -468,7 +468,7 @@ def edicao_capitulo():
         linhas = int(widget.index("end-1c").split(".")[0])
 
         # Ajusta a altura
-        widget.configure(height=max(40, linhas * 20 + 2))
+        widget.configure(height=max(40, linhas * 20 + 10))
 
         # Limpa a flag de modificação
         widget.edit_modified(False)
