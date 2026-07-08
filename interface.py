@@ -1,4 +1,15 @@
 import customtkinter as ctk
+from customtkinter.windows.widgets.ctk_scrollable_frame import CTkScrollableFrame
+
+_check_if_valid_scroll_original = CTkScrollableFrame._check_if_valid_scroll
+
+def _check_if_valid_scroll_patched(self, widget):
+    if isinstance(widget, str):
+        return False
+    return _check_if_valid_scroll_original(self, widget)
+
+CTkScrollableFrame._check_if_valid_scroll = _check_if_valid_scroll_patched
+
 from widgets import *
 import historias
 import uuid
