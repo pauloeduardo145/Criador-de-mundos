@@ -578,6 +578,15 @@ def edicao_capitulo(*args):
     botao_salvar = ctk.CTkButton(frame_lista_conteudo, text="Salvar", command=lambda *args: salvar_edicao())
     botao_salvar.pack(pady=10)
 
+    contador = ctk.CTkLabel(frame_lista_conteudo, text="0 caracteres")
+    contador.pack(padx=100)
+
+    def atualizar(event=None):
+        texto = conteudos.get("1.0", "end-1c")
+        contador.configure(text=f"{len(texto)} caracteres")
+
+    conteudos.bind("<KeyRelease>", atualizar)
+
     arearolavel()
 
 def edicao_personagem(*args):
