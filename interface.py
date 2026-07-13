@@ -173,6 +173,22 @@ ue.grid(column=0,row=4,sticky="w",padx=10,pady=5)
 sp = ctk.CTkLabel(lista,text='Sistema(as) de Poder(es):')
 sp.grid(column=0,row=5,sticky="w",padx=10,pady=5)
 
+# FUNÇÃO DE PADRONIZAÇÃO E RECALCULA A AREA ROLÁVEL
+
+def limpar_frame_conteudo():
+    for widget in frame_lista_conteudo.winfo_children():
+        widget.destroy()
+
+    # Força o canvas a recalcular a área rolável com base no conteúdo atual
+    frame_lista_conteudo.update_idletasks()
+    frame_lista_conteudo._parent_canvas.configure(scrollregion=frame_lista_conteudo._parent_canvas.bbox("all"))
+    frame_lista_conteudo._parent_canvas.yview_moveto(0)
+
+def arearolavel():
+    frame_lista_conteudo.update_idletasks()
+    frame_lista_conteudo._parent_canvas.configure(scrollregion=frame_lista_conteudo._parent_canvas.bbox("all"))
+    frame_lista_conteudo._parent_canvas.yview_moveto(0)
+
 # ATALHOS DE NAVEGAÇÃO
 
 def selecionar_tudo_entry(event):
@@ -296,8 +312,7 @@ def selecionar_historia(historia):
         sp.configure(text="Sistema P: Nenhum")
 
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     mostrar_no_conteudo(frame_lista_conteudo,historia["personagens"],selecionar_personagem,"nome")
 
@@ -313,8 +328,7 @@ def mostrar_todas_imagens_da_galeria(event=None):
 
     if historia_selecionada is None:
 
-        for widget in frame_lista_conteudo.winfo_children():
-            widget.destroy()
+        limpar_frame_conteudo()
 
         ctk.CTkLabel(
             frame_lista_conteudo,
@@ -324,8 +338,7 @@ def mostrar_todas_imagens_da_galeria(event=None):
         ).pack(expand=True)
         return
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     personagens = [
         p for p in historia_selecionada["personagens"]
@@ -343,8 +356,7 @@ def mostrar_todos_personagens(event=None):
 
     if historia_selecionada is None:
 
-        for widget in frame_lista_conteudo.winfo_children():
-            widget.destroy()
+        limpar_frame_conteudo()
 
         ctk.CTkLabel(
             frame_lista_conteudo,
@@ -357,8 +369,7 @@ def mostrar_todos_personagens(event=None):
     personagens = historia_selecionada.get("personagens", [])
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um título para a seção
     titulo = ctk.CTkLabel(frame_lista_conteudo,text=f"📂 Todos os Personagens ({len(personagens)})",font=("Helvetica", 18, "bold"))
@@ -369,8 +380,7 @@ def mostrar_todos_personagens(event=None):
 def mostrar_todos_capitulos(event=None):
     if historia_selecionada is None:
 
-        for widget in frame_lista_conteudo.winfo_children():
-            widget.destroy()
+        limpar_frame_conteudo()
 
         ctk.CTkLabel(
             frame_lista_conteudo,
@@ -383,8 +393,7 @@ def mostrar_todos_capitulos(event=None):
     capitulo = historia_selecionada.get("capitulos", [])
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um título para a seção
     titulo = ctk.CTkLabel(
@@ -400,8 +409,7 @@ def mostrar_todas_imagens(event=None):
 
     if historia_selecionada is None:
 
-        for widget in frame_lista_conteudo.winfo_children():
-            widget.destroy()
+        limpar_frame_conteudo()
 
         ctk.CTkLabel(
             frame_lista_conteudo,
@@ -411,8 +419,7 @@ def mostrar_todas_imagens(event=None):
         ).pack(expand=True)
         return
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     personagens_com_imagem = [
         p for p in historia_selecionada["personagens"]
@@ -436,8 +443,7 @@ def selecionar_personagem(personagem):
     personagem_selecionado = personagem
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     linha = 0
 
@@ -479,8 +485,7 @@ def selecionar_capitulo(capitulo):
     capitulo_selecionado = capitulo
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um label para o personagem
     for chave, valor in capitulo.items():
@@ -499,8 +504,7 @@ def selecionar_observacoes(observa):
     observacoes_selecionado = observa
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um label para o sistema de poder
     for chave, valor in observa.items():
@@ -521,11 +525,8 @@ def edicao_capitulo(*args):
         print("Nenhuma história selecionada")
         return
 
-    # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
-    # 2. Cria um título para a seção
     titulo = ctk.CTkLabel(
         frame_lista_conteudo,
         text=f"Modo Edição",
@@ -533,46 +534,51 @@ def edicao_capitulo(*args):
     titulo.pack(pady=10, anchor="w", padx=20)
 
     nome = ctk.CTkEntry(frame_lista_conteudo)
-    nome.insert(0,capitulo_selecionado["nome"])
-    nome.pack(fill="x",padx=10,pady=5)
+    nome.insert(0, capitulo_selecionado["nome"])
+    nome.pack(fill="x", padx=10, pady=5)
     configurar_entry(nome)
+
+    ALTURA_MIN = 80
+    ALTURA_MAX = 400   # a partir daqui, a rolagem interna assume o controle
 
     def ajustar_altura(event=None):
         widget = conteudos
-
-        # Atualiza o layout
         widget.update_idletasks()
 
-        # Quantidade de linhas
-        linhas = int(widget.index("end-1c").split(".")[0])
+        # conta linhas EXIBIDAS (respeita o wrap="word"), não só quebras "\n"
+        resultado = widget._textbox.count("1.0", "end", "displaylines")
+        linhas = int(resultado[0]) if resultado else 1
 
-        # Ajusta a altura
-        widget.configure(height=max(40, linhas * 20 + 10))
+        altura_por_linha = 21  # aproximação para a fonte padrão do CTkTextbox
+        altura_desejada = linhas * altura_por_linha + 20  # + respiro
 
-        # Limpa a flag de modificação
+        nova_altura = max(ALTURA_MIN, min(altura_desejada, ALTURA_MAX))
+        widget.configure(height=nova_altura)
+
         widget.edit_modified(False)
 
-    conteudos = ctk.CTkTextbox(frame_lista_conteudo, wrap="word")
+    conteudos = ctk.CTkTextbox(
+        frame_lista_conteudo,
+        wrap="word",
+        activate_scrollbars=True  # só entra em ação quando bater no limite
+    )
     conteudos.pack(fill="x", padx=10, pady=5)
     configurar_textbox(conteudos)
-
     conteudos.insert("1.0", capitulo_selecionado["conteudo"])
 
-    # Ajusta a altura inicial
     ajustar_altura()
-
-    # Sempre que o texto for alterado
     conteudos.bind("<<Modified>>", ajustar_altura)
 
     def salvar_edicao():
         capitulo_selecionado["nome"] = nome.get()
-        capitulo_selecionado["conteudo"] = conteudos.get("1.0","end-1c")
-
+        capitulo_selecionado["conteudo"] = conteudos.get("1.0", "end-1c")
         historias.salvar_dados(historias.Historias)
         selecionar_capitulo(capitulo_selecionado)
 
-    botao_salvar = ctk.CTkButton(frame_lista_conteudo,text="Salvar",command=lambda *args: salvar_edicao())
+    botao_salvar = ctk.CTkButton(frame_lista_conteudo, text="Salvar", command=lambda *args: salvar_edicao())
     botao_salvar.pack(pady=10)
+
+    arearolavel()
 
 def edicao_personagem(*args):
     global personagem_selecionado
@@ -585,8 +591,7 @@ def edicao_personagem(*args):
         return
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um título para a seção
     titulo = ctk.CTkLabel(frame_lista_conteudo,text=f"Modo Edição",font=("Helvetica", 18, "bold"))
@@ -828,12 +833,13 @@ def edicao_personagem(*args):
     botao_salvar = ctk.CTkButton(frame_lista_conteudo,text="Salvar",command=lambda: salvar_edicao())
     botao_salvar.pack(pady=10)
 
+    arearolavel()
+
     botao_fechar = ctk.CTkButton(frame_lista_conteudo,text="Fechar sem salvar",command=fechar_sem_salvar)
     botao_fechar.pack(pady=10)
 
 def abrir_galeria_personagem(personagem):
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # IMAGEM PRINCIPAL
     if personagem.get("imagens"):
@@ -886,8 +892,7 @@ def edicao_observacao(*args):
         return
 
     # Limpa o frame
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # Título
     titulo = ctk.CTkLabel(
@@ -1043,13 +1048,11 @@ def excluir_historia(nome):
 
     carregar_interface()
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
 def excluir_item(*args):
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     tipo_var = ctk.StringVar(value="Personagem")
     item_var = ctk.StringVar(value="")
@@ -1447,8 +1450,7 @@ def mostrar_todos_sistemas_poder():
     sistemapoder = historia_selecionada["sistemas_poder"]
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um título para a seção
     titulo = ctk.CTkLabel(
@@ -1466,8 +1468,7 @@ def selecionar_sistemapoder(sistemapode):
     sistema_de_poder_selecionado = sistemapode
 
     # 1. Limpa o frame central para remover o que estava antes
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     # 2. Cria um label para o sistema de poder
     for chave, valor in sistemapode.items():
@@ -1518,8 +1519,7 @@ def edicao_sistempoder(*args):
         print("Nenhum sistema de poder selecionado")
         return
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     titulo = ctk.CTkLabel(frame_lista_conteudo,text="Modo Edição",font=("Helvetica", 18, "bold"))
     titulo.pack(pady=10, anchor="w", padx=20)
@@ -1582,6 +1582,8 @@ def edicao_sistempoder(*args):
 
     botao_salvar = ctk.CTkButton(frame_lista_conteudo,text="Salvar",command=lambda: salvar_edicao())
     botao_salvar.pack(pady=10)
+
+    arearolavel()
 
 janesispoder = ctk.CTkFrame(janela,width=600,height=500)
 janesispoder.grid_propagate(False)
@@ -1674,8 +1676,7 @@ def mostrar_todas_observacoes():
 
     observacoes = historia_selecionada.get("observacoes", [])
 
-    for widget in frame_lista_conteudo.winfo_children():
-        widget.destroy()
+    limpar_frame_conteudo()
 
     titulo = ctk.CTkLabel(
         frame_lista_conteudo,
@@ -1803,6 +1804,7 @@ janela.bind("<Alt-Left>", lambda event: voltar())
 #ATALHOS DE EDIÇÃO
 
 janela.bind("<Control-Key-e>", edicao_personagem)
+janela.bind("<Control-Key-i>", edicao_capitulo)
 janela.bind("<Key-Delete>", excluir_item)
 janela.bind("<Control-Key-Delete>", excluir_item)
 
