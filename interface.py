@@ -463,6 +463,8 @@ def selecionar_personagem(personagem):
         foto.grid()
 
     # 2. Cria um label para o personagem
+    labels_valor = []
+
     for chave, valor in personagem.items():
         
         if chave in ["imagens", "galeria", "id", "historia_id"]:
@@ -470,9 +472,21 @@ def selecionar_personagem(personagem):
         
         ctk.CTkLabel(frame_info,text=f"{chave}:",font=("Arial", 16, "bold")).grid(row=linha, column=0, sticky="nsew",pady=(5, 15))
 
-        ctk.CTkLabel(frame_info,text=str(valor),wraplength=800,justify="left").grid(row=linha, column=1, sticky="w", padx=10,pady=(10, 30))
+        valor_label = ctk.CTkLabel(frame_info,text=str(valor),anchor="w",wraplength=560,justify="left")
+        valor_label.grid(row=linha, column=1, sticky="ew", padx=10,pady=(10, 30))
+        labels_valor.append(valor_label)
 
         linha += 1
+
+    def _atualizar_wraplength(evento, labels=labels_valor):
+        # Usa a largura real do frame_info (o container), não a do próprio
+        # label, para evitar o ciclo de realimentação em que o label pede
+        # o mínimo, o grid concede o mínimo, e o texto quebra letra a letra.
+        largura_disponivel = max(evento.width - 130, 100)
+        for rotulo in labels:
+            rotulo.configure(wraplength=largura_disponivel)
+
+    frame_info.bind("<Configure>", _atualizar_wraplength)
 
     edit = ctk.CTkButton(frame_lista_conteudo,text="Editar", command=lambda *args: edicao_personagem(*args))
     edit.grid(row=1, column=0, columnspan=2, pady=10)
