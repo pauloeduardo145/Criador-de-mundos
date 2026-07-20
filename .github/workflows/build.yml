@@ -2,8 +2,8 @@ name: Build Multiplataforma
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
             asset_ext: ''
           - os: macos-latest
             artifact_name: CriadorDeMundos-macos
-            asset_ext: ''
+            asset_ext: .app
 
     runs-on: ${{ matrix.os }}
 
@@ -65,7 +65,6 @@ jobs:
           if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF_NAME" ]; then VERSION="0.0.1"; fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      # ---------- .deb e .rpm via fpm ----------
       - name: Instalar fpm
         run: |
           sudo apt-get update
@@ -90,7 +89,6 @@ jobs:
             --prefix /usr/local/bin \
             dist/CriadorDeMundos=criadordemundos
 
-      # ---------- AppImage ----------
       - name: Montar estrutura AppDir
         run: |
           mkdir -p AppDir/usr/bin
@@ -103,7 +101,6 @@ jobs:
           Type=Application
           Categories=Utility;
           EOF
-          # Substitua por um ícone real do projeto (256x256 .png) se disponível
           curl -s -o AppDir/criadordemundos.png https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/appimagetool.png
 
       - name: Baixar appimagetool
@@ -123,19 +120,71 @@ jobs:
             *.deb
             *.rpm
             *.AppImage
+
+  deploy-site:
+    needs:
+      - build
+      - package-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Clonar site
+        run: |
+          git clone https://x-access-token:${{ secrets.SITE_TOKEN }}@github.com/pauloeduardo145/CriadorDeMundos-Site.git site
+
+      - name: Copiar Windows
+        run: |
+          mkdir -p site/Windows
+          find artifacts -name "*.exe" -exec cp {} site/Windows/CriadorDeMundos.exe \;
+
+      - name: Copiar Linux
+        run: |
+          mkdir -p site/Linux
+          find artifacts -name "*.AppImage" -exec cp {} site/Linux/CriadorDeMundos.AppImage \;
+          find artifacts -name "*.deb" -exec cp {} site/Linux/ \;
+          find artifacts -name "*.rpm" -exec cp {} site/Linux/ \;
+
+      - name: Copiar Mac
+        run: |
+          mkdir -p site/Mac
+          find artifacts -name "*.app" -maxdepth 3 -exec cp -r {} site/Mac/CriadorDeMundos.app \;
+
+      - name: Criar latest.json
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          cat <<EOF > site/latest.json
+          {
+            "version":"$VERSION",
+            "downloads":{
+                "windows":"/Windows/CriadorDeMundos.exe",
+                "linux":"/Linux/CriadorDeMundos.AppImage",
+                "mac":"/Mac/CriadorDeMundos.app"
+            }
+          }
+          EOF
+
+      - name: Commit
+        run: |
+          cd site
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Nova versão $GITHUB_REF_NAME" || echo "Nada para commitar"
+          git push
+
   release:
     needs:
       - build
       - package-linux
-  
     runs-on: ubuntu-latest
-  
     permissions:
       contents: write
-  
     steps:
       - uses: actions/download-artifact@v4
-  
+
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
