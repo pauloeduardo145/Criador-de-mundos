@@ -42,14 +42,31 @@ Com ele é possível criar histórias completas contendo personagens, capítulos
 ```text
 Criador-de-mundos/
 │
-├── interface.py
-├── widgets.py
-├── modelos.py
+├── .github/
+│   └── workflows/
+│       └── build.yml
+│
+├── build/
+├── dist/
+├── venv/
+│
+├── .gitignore
 ├── historias.py
+├── icone_planeta.ico
+├── icone_planeta.png
+├── interface.py
+├── interface.spec
+├── LICENSE
+├── main.py
+├── modelos.py
+├── perfil.py
+├── README.md
+├── requirements.txt
 ├── storage.py
-├── imagens/
-├── galerias/
-└── README.md
+├── teste.py
+├── updater.py
+├── version.txt
+└── widgets.py
 ```
 
 ---
