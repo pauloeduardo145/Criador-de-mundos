@@ -133,7 +133,7 @@ jobs:
 
       - name: Clonar site
         run: |
-          git clone https://x-access-token:${{ secrets.SITE_TOKEN }}@github.com/pauloeduardo145/Create-of-World-s
+          git clone https://x-access-token:${{ secrets.SITE_TOKEN }}@github.com/pauloeduardo145/Create-of-World-s.git site
 
       - name: Copiar Windows
         run: |
