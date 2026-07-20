@@ -1,4 +1,7 @@
 import customtkinter as ctk
+import sys
+import tkinter as tk
+
 from customtkinter.windows.widgets.ctk_scrollable_frame import CTkScrollableFrame
 
 _check_if_valid_scroll_original = CTkScrollableFrame._check_if_valid_scroll
@@ -55,6 +58,21 @@ janela.attributes('-fullscreen', True)
 janela.bind('<Escape>', lambda e: janela.attributes('-fullscreen', False))
 janela.grid_columnconfigure(1, weight=1)
 janela.grid_rowconfigure(1,weight=1)
+
+# Ícone da janela — .ico só é suportado nativamente no Windows;
+# no Linux/Mac o Tkinter precisa do iconphoto com uma imagem (.png).
+def _caminho_recurso(relativo):
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relativo)
+ 
+try:
+    if sys.platform.startswith("win"):
+        janela.iconbitmap(_caminho_recurso("icone_planeta.ico"))
+    else:
+        _icone_png = tk.PhotoImage(file=_caminho_recurso("icone_planeta.png"))
+        janela.iconphoto(True, _icone_png)
+except Exception as erro_icone:
+    print(f"Não foi possível carregar o ícone da janela: {erro_icone}")
 
 #CONTEUDO
 
