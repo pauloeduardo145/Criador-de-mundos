@@ -47,3 +47,79 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: dist/CriadorDeMundos${{ matrix.asset_ext }}
+
+  package-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar binário Linux gerado no job anterior
+        uses: actions/download-artifact@v4
+        with:
+          name: CriadorDeMundos-linux
+          path: dist
+
+      - name: Preparar binário
+        run: |
+          chmod +x dist/CriadorDeMundos
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "$GITHUB_REF_NAME" ]; then VERSION="0.0.1"; fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # ---------- .deb e .rpm via fpm ----------
+      - name: Instalar fpm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev build-essential rpm
+          sudo gem install --no-document fpm
+
+      - name: Gerar pacote .deb
+        run: |
+          fpm -s dir -t deb \
+            -n criadordemundos \
+            -v "$VERSION" \
+            --description "Criador de Mundos - ferramenta de worldbuilding" \
+            --prefix /usr/local/bin \
+            dist/CriadorDeMundos=criadordemundos
+
+      - name: Gerar pacote .rpm
+        run: |
+          fpm -s dir -t rpm \
+            -n criadordemundos \
+            -v "$VERSION" \
+            --description "Criador de Mundos - ferramenta de worldbuilding" \
+            --prefix /usr/local/bin \
+            dist/CriadorDeMundos=criadordemundos
+
+      # ---------- AppImage ----------
+      - name: Montar estrutura AppDir
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp dist/CriadorDeMundos AppDir/usr/bin/criadordemundos
+          cat > AppDir/criadordemundos.desktop <<EOF
+          [Desktop Entry]
+          Name=Criador de Mundos
+          Exec=criadordemundos
+          Icon=criadordemundos
+          Type=Application
+          Categories=Utility;
+          EOF
+          # Substitua por um ícone real do projeto (256x256 .png) se disponível
+          curl -s -o AppDir/criadordemundos.png https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/appimagetool.png
+
+      - name: Baixar appimagetool
+        run: |
+          curl -L -o appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+
+      - name: Gerar AppImage
+        run: |
+          ./appimagetool --appimage-extract-and-run AppDir CriadorDeMundos-x86_64.AppImage
+
+      - name: Enviar pacotes Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: CriadorDeMundos-linux-pacotes
+          path: |
+            *.deb
+            *.rpm
+            *.AppImage
