@@ -539,7 +539,7 @@ def edicao_capitulo(*args):
     configurar_entry(nome)
 
     ALTURA_MIN = 80
-    ALTURA_MAX = 400   # a partir daqui, a rolagem interna assume o controle
+    ALTURA_MAX = 375  # a partir daqui, a rolagem interna assume o controle
 
     def ajustar_altura(event=None):
         widget = conteudos
@@ -1141,25 +1141,17 @@ def excluir_item(*args):
     ).pack(pady=15)
 #CAIXA
 
-def criar_perfil():
-    global perfil
-    perfil = ctk.CTkFrame(janela, width=100, height=100)
-    perfil.grid_columnconfigure(1, weight=1)
-    perfil.grid_rowconfigure(1, weight=1)
-    perfil.grid(column=0, row=1, padx=10, pady=5)
+from perfil import Perfil
 
 caixa_frame = ctk.CTkFrame(janela,width= 200,height=20)
 caixa_frame.grid_propagate(False)
 caixa_frame.grid(column=0,row=0,padx=10,pady=5)
 
-botaofake = ctk.CTkButton(caixa_frame,height=10,text="butoon",fg_color="black",width=4,font=("Helvetica", 7))
-botaofake.grid(column=0,row=0,sticky="n",padx=5,pady=5)
+perfil_config = ctk.CTkButton(caixa_frame,height=10,text="👤",fg_color="black",width=4,font=("Helvetica", 7), command=lambda: Perfil(janela).abrir_perfil())
+perfil_config.grid(column=0,row=0,sticky="n",padx=5,pady=5)
 
 exit_button = ctk.CTkButton(caixa_frame,height=10,text='Exit',fg_color="black",width=4,font=("Helvetica", 7),command=lambda: janela.quit())
 exit_button.grid(column=1,row=0,sticky="n",padx=5,pady=5)
-
-label_config = ctk.CTkButton(caixa_frame,height=10,text="config",fg_color="black",width=4,font=("Helvetica", 7), command=lambda:criar_perfil() )
-label_config.grid(column=2,row=0,sticky="n",padx=5,pady=5)
 
 #CRIAR INTERFACE
 
@@ -1790,7 +1782,7 @@ botao_excluir.grid(column=8,row=0,sticky="n",padx=5,pady=5)
 
 #ATALHOS GLOBAIS
 
-def ch():
+def sh():
     if historia_selecionada is not None:
         pass
     else:
@@ -1798,7 +1790,13 @@ def ch():
 
 janela.bind("<F5>", lambda e: selecionar_historia(historia_selecionada))
 
-janela.bind("<Control-n>", lambda event: ch())
+janela.bind("<Control-n>", lambda event: sh())
+
+def sc():
+    if historia_selecionada and capitulo_selecionado is None:
+        mostrar_frame(janecapi)
+
+janela.bind("<Control-Key-c>", lambda event: sc())
 
 # ATALHOS DE NAVEGAÇÃO
 

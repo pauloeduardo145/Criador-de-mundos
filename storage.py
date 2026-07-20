@@ -10,6 +10,7 @@ PASTA_BACKUP = os.path.join(PASTA_PROJETO, "Backups Criador de Mundos")
 PASTA_IMAGENS = os.path.join(PASTA_PROJETO, "IMAGENS")
 ARQUIVO_DADOS = os.path.join(PASTA_PROJETO, "historias.json")
 PASTA_GALERIA = os.path.join(PASTA_PROJETO,"GALERIA")
+ARQUIVO_PERFIL = os.path.join(PASTA_PROJETO,"perfil.json")
 
 # Garante que as pastas existam
 os.makedirs(PASTA_IMAGENS, exist_ok=True)
@@ -17,7 +18,6 @@ os.makedirs(PASTA_BACKUP, exist_ok=True)
 os.makedirs(PASTA_GALERIA, exist_ok=True)
 
 def limpar_backups_antigos(max_quantidade=30):
-    """Mantém apenas os X backups mais recentes."""
     arquivos = sorted(
         [f for f in os.listdir(PASTA_BACKUP) if f.endswith(".zip")]
     )
@@ -86,6 +86,27 @@ def salvar_dados(dados):
 
     except Exception as erro:
         print(f"Erro ao criar backup: {erro}")
+
+def carregar_perfil():
+    if not os.path.exists(ARQUIVO_PERFIL):
+        return {
+            "autor": "",
+            "descricao": ""
+        }
+
+    try:
+        with open(ARQUIVO_PERFIL, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Erro ao carregar perfil: {e}")
+        return {
+            "autor": "",
+            "descricao": ""
+        }
+
+def salvar_perfil(perfil):
+    with open(ARQUIVO_PERFIL, "w", encoding="utf-8") as f:
+        json.dump(perfil, f, ensure_ascii=False, indent=4)
 
 # Exemplo de uso:
 # dados = carregar_dados()
