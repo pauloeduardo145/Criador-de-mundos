@@ -79,7 +79,7 @@ class Perfil:
 
         ## VERSÃO
 
-        versao = ctk.CTkLabel(self.fa,text=" Versão: 1.0.0",anchor="e")
+        versao = ctk.CTkLabel(self.fa,text=" Versão: 1.0.1",anchor="e")
         versao.grid(row=12,column=1)
 
     def fechar_perfil(self):
