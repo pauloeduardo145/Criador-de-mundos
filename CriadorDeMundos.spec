@@ -4,8 +4,15 @@ import sys
 
 block_cipher = None
 
+datas = [
+    ("icone_planeta.png", "."),
+    ("icone_planeta.ico", "."),
+    ("version.txt", "."),
+]
+
 a = Analysis(
     ['main.py'],
+    datas=datas,
     pathex=[],
     binaries=[],
     datas=[('version.txt', '.')],

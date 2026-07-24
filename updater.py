@@ -1,6 +1,5 @@
 import os
 import sys
-
 import requests
 
 if getattr(sys, "frozen", False):
