@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from storage import carregar_perfil, salvar_perfil
+from updater import VERSAO_ATUAL
 
 PerfilUsuario = carregar_perfil()
 
@@ -79,7 +80,7 @@ class Perfil:
 
         ## VERSÃO
 
-        versao = ctk.CTkLabel(self.fa,text=" Versão: 1.0.1",anchor="e")
+        versao = ctk.CTkLabel(self.fa,text=f" Versão: {VERSAO_ATUAL}",anchor="e")
         versao.grid(row=12,column=1)
 
     def fechar_perfil(self):

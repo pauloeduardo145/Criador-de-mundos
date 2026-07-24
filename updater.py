@@ -3,7 +3,7 @@ import requests
 with open("version.txt", encoding="utf-8") as f:
     VERSAO_ATUAL = f.read().strip()
 
-URL = "https://https://create-of-world-s.pauloeduardodasilvaporto613.workers.dev/latest.json/latest.json"
+URL = "https://create-of-world-s.pauloeduardodasilvaporto613.workers.dev/latest.json"
 
 
 def verificar_atualizacao():
