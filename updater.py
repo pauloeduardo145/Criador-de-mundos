@@ -10,6 +10,7 @@ else:
 with open(os.path.join(BASE_PATH, "version.txt"), encoding="utf-8") as f:
     VERSAO_ATUAL = f.read().strip()
 
+
 URL = "https://create-of-world-s.pauloeduardodasilvaporto613.workers.dev/latest.json"
 
 
