@@ -1,5 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
+
 block_cipher = None
 
 a = Analysis(
@@ -45,3 +47,11 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
+if sys.platform == 'darwin':
+    app = BUNDLE(
+        exe,
+        name='CriadorDeMundos.app',
+        icon=None,
+        bundle_identifier='com.pauloeduardo.criadordemundos',
+    )
