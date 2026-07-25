@@ -209,26 +209,31 @@ def arearolavel():
 
 # ATALHOS DE NAVEGAÇÃO
 
-def selecionar_tudo_entry(event):
-    event.widget.select_range(0, "end")
-    event.widget.icursor("end")
-    return "break"
+from entry_textbox import configurar_entry,configurar_textbox
 
-def selecionar_tudo_textbox(event):
-    event.widget.tag_add("sel", "1.0", "end-1c")
-    event.widget.mark_set("insert", "1.0")
-    event.widget.see("insert")
-    return "break"
+##MOSTRAR NO CONTEUDO
 
-def configurar_entry(entry):
-    entry.bind("<Control-a>", selecionar_tudo_entry)
-    entry.bind("<Control-A>", selecionar_tudo_entry)
+#PERSONAGEM
 
-def configurar_textbox(textbox):
-    textbox.bind("<Control-a>", selecionar_tudo_textbox)
-    textbox.bind("<Control-A>", selecionar_tudo_textbox)
+from personagem import Personagem
 
-#MOSTRAR NO CONTEUDO
+gerenciador_personagem = Personagem(
+    frame_lista_conteudo,
+    obter_historia_selecionada=lambda: historia_selecionada
+)
+
+def selecionar_personagem(personagem):
+    global personagem_selecionado
+    personagem_selecionado = personagem
+    gerenciador_personagem.selecionar_personagem(personagem)
+
+def edicao_personagem(*args):
+    gerenciador_personagem.edicao_personagem()
+
+def abrir_galeria_personagem(personagem):
+    gerenciador_personagem.abrir_galeria_personagem(personagem)
+
+# CAPITULO
 
 def mostrar_cards_com_imagem(frame,itens,callback,chave_imagem="imagens",chave_nome="nome",tamanho=150):
 
@@ -455,62 +460,6 @@ def mostrar_todas_imagens(event=None):
 
 #SELECIONAR ...
 
-def selecionar_personagem(personagem):
-    global personagem_selecionado
-
-    personagem_selecionado = personagem
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    linha = 0
-
-    frame_imagem = ctk.CTkFrame(frame_lista_conteudo)
-    frame_imagem.grid(row=0, column=0, sticky="n" ,padx=20)
-
-    frame_info = ctk.CTkFrame(frame_lista_conteudo,width=600)
-    frame_info.grid_columnconfigure(1, weight=1)
-    frame_info.grid(row=0, column=1, sticky="nsew", padx=20)
-    #frame_info.grid_propagate(False)
-
-    if personagem.get("imagens"):
-        img = mostrar_imagem(personagem["imagens"],500)
-
-        foto = ctk.CTkLabel(frame_imagem, image=img, text="")
-        foto.image = img
-        foto.grid()
-
-    # 2. Cria um label para o personagem
-    labels_valor = []
-
-    for chave, valor in personagem.items():
-        
-        if chave in ["imagens", "galeria", "id", "historia_id"]:
-            continue
-        
-        ctk.CTkLabel(frame_info,text=f"{chave}:",font=("Arial", 16, "bold")).grid(row=linha, column=0, sticky="nsew",pady=(5, 15))
-
-        valor_label = ctk.CTkLabel(frame_info,text=str(valor),anchor="w",wraplength=560,justify="left")
-        valor_label.grid(row=linha, column=1, sticky="ew", padx=10,pady=(10, 30))
-        labels_valor.append(valor_label)
-
-        linha += 1
-
-    def _atualizar_wraplength(evento, labels=labels_valor):
-        # Usa a largura real do frame_info (o container), não a do próprio
-        # label, para evitar o ciclo de realimentação em que o label pede
-        # o mínimo, o grid concede o mínimo, e o texto quebra letra a letra.
-        largura_disponivel = max(evento.width - 130, 100)
-        for rotulo in labels:
-            rotulo.configure(wraplength=largura_disponivel)
-
-    frame_info.bind("<Configure>", _atualizar_wraplength)
-
-    edit = ctk.CTkButton(frame_lista_conteudo,text="Editar", command=lambda *args: edicao_personagem(*args))
-    edit.grid(row=1, column=0, columnspan=2, pady=10)
-
-    print(personagem["nome"])
-
 def selecionar_capitulo(capitulo):
     global capitulo_selecionado
 
@@ -620,306 +569,6 @@ def edicao_capitulo(*args):
     conteudos.bind("<KeyRelease>", atualizar)
 
     arearolavel()
-
-def edicao_personagem(*args):
-    global personagem_selecionado
-
-    if "galeria" not in personagem_selecionado:
-        personagem_selecionado["galeria"] = []
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um título para a seção
-    titulo = ctk.CTkLabel(frame_lista_conteudo,text=f"Modo Edição",font=("Helvetica", 18, "bold"))
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    nome = ctk.CTkEntry(frame_lista_conteudo)
-    nome.insert(0,personagem_selecionado["nome"])
-    nome.pack(fill="x",padx=10,pady=5)
-    configurar_entry(nome)
-
-    p = ctk.CTkLabel(frame_lista_conteudo,text="Personalidade:")
-    p.pack(padx=10,pady=5)
-
-    personalidade = ctk.CTkTextbox(frame_lista_conteudo,height=50,fg_color="#1E1E1E",text_color="white", border_color="gray")
-    personalidade.pack(fill="x",pady=10,padx=5)
-    personalidade.insert("1.0", personagem_selecionado["personalidade"])
-    configurar_textbox(personalidade)
-
-    pe = ctk.CTkLabel(frame_lista_conteudo,text="Aparencia:")
-    pe.pack(padx=10,pady=5) 
-
-    aparencia = ctk.CTkTextbox(frame_lista_conteudo,height=50)
-    aparencia.pack(fill="x",pady=10,padx=5)
-    aparencia.insert("1.0", personagem_selecionado["aparencia"])
-    configurar_textbox(aparencia)
-
-    his = ctk.CTkLabel(frame_lista_conteudo,text="Historia:")
-    his.pack(padx=10,pady=5)
-
-    hispers = ctk.CTkTextbox(frame_lista_conteudo,height=50)
-    hispers.pack(fill="x",pady=10,padx=5)
-    hispers.insert("1.0", personagem_selecionado["historia"])
-    configurar_textbox(hispers)
-
-    r = ctk.CTkLabel(frame_lista_conteudo,text="Relações:")
-    r.pack(padx=10,pady=5)
-
-    relacoes = ctk.CTkTextbox(frame_lista_conteudo,height=50)
-    relacoes.pack(fill="x",pady=10,padx=5)
-    relacoes.insert("1.0", personagem_selecionado["relacoes"])
-    configurar_textbox(relacoes)
-
-    po = ctk.CTkLabel(frame_lista_conteudo,text="Poderes:")
-    po.pack(padx=10,pady=5)
-
-    poderes = ctk.CTkTextbox(frame_lista_conteudo,height=50)
-    poderes.pack(fill="x",pady=10,padx=5)
-    poderes.insert("1.0", personagem_selecionado["poderes"])
-    configurar_textbox(poderes)
-
-    fraq = ctk.CTkLabel(frame_lista_conteudo,text="Fraquezas:")
-    fraq.pack(padx=10,pady=5)
-
-    fraqueza = ctk.CTkTextbox(frame_lista_conteudo,height=50)
-    fraqueza.pack(fill="x",pady=10,padx=5)
-    fraqueza.insert("1.0", personagem_selecionado["fraquezas"])
-    configurar_textbox(fraqueza)
-
-    ha = ctk.CTkLabel(frame_lista_conteudo,text="Habilidades:")
-    ha.pack(padx=10,pady=5)
-
-    hapers = ctk.CTkTextbox(frame_lista_conteudo,height=50)
-    hapers.pack(fill="x",pady=10,padx=5)
-    hapers.insert("1.0", personagem_selecionado["habilidades"])
-    configurar_textbox(hapers)
-
-    # IMAGEM
-
-    preview = ctk.CTkLabel(frame_lista_conteudo,text="[Clique para alterar imagem]")
-    preview.pack(pady=10)
-
-    ctk.CTkLabel(frame_lista_conteudo, text="Galeria do personagem").pack(pady=(15, 5))
-
-    frame_galeria = ctk.CTkFrame(frame_lista_conteudo)
-    frame_galeria.pack(fill="x", padx=10, pady=5)
-
-    def atualizar_galeria():
-        for widget in frame_galeria.winfo_children():
-            widget.destroy()
-
-        for indice, item in enumerate(personagem_selecionado.get("galeria", [])):
-
-            caminho = item.get("caminho")
-            descricao = item.get("descricao", "")
-
-            try:
-                img = mostrar_imagem(caminho,100)
-
-                card = ctk.CTkFrame(frame_galeria)
-                card.grid(row=indice // 4, column=indice % 4, padx=5, pady=5)
-
-                label = ctk.CTkLabel(card, image=img, text="")
-                label.image = img
-                label.pack()
-
-                ctk.CTkLabel(card, text=descricao, wraplength=100).pack()
-
-                ctk.CTkButton(card,text="Remover",width=80,command=lambda i=item: remover_da_galeria(i)).pack(pady=2)
-
-            except Exception as erro:
-                print(erro)
-    
-
-    def adicionar_na_galeria():
-
-        caminho = filedialog.askopenfilename(
-            title="Selecione uma imagem",
-            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),
-                    ("Todos os arquivos", "*.*")]
-        )
-
-        if not caminho:
-            return
-
-        janela_desc = ctk.CTkInputDialog(text="Digite a descrição da imagem:",title="Descrição da Galeria")
-
-        descricao = janela_desc.get_input()
-
-        if descricao is None:
-            descricao = ""
-
-        if "galeria" not in personagem_selecionado:
-            personagem_selecionado["galeria"] = []
-
-        extensao = os.path.splitext(caminho)[1]
-
-        nome_arquivo = f"{uuid.uuid4()}{extensao}"
-
-        novo_caminho = os.path.join(storage.PASTA_GALERIA,nome_arquivo)
-
-        shutil.copy2(caminho, novo_caminho)
-
-        personagem_selecionado["galeria"].append({"caminho": novo_caminho,"descricao": descricao})
-
-        atualizar_galeria()
-
-    atualizar_galeria()
-
-    def remover_da_galeria(item):
-
-        confirmar = messagebox.askyesno("Remover imagem","Deseja remover esta imagem da galeria?")
-
-        if not confirmar:
-            return
-
-        caminho = item.get("caminho")
-
-        personagem_selecionado["galeria"].remove(item)
-
-        if caminho and os.path.exists(caminho):
-            try:
-                os.remove(caminho)
-            except Exception as erro:
-                print(f"Erro ao apagar arquivo: {erro}")
-        
-        historias.salvar_dados(historias.Historias)
-        atualizar_galeria()
-
-    ctk.CTkButton(frame_lista_conteudo,text="Adicionar imagem à galeria",command=lambda: adicionar_na_galeria()).pack(pady=5)
-
-    def trocar_imagem():
-        global caminho_imagem
-
-        novo_caminho = filedialog.askopenfilename(title="Selecione uma imagem",filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),("Todos os arquivos", "*.*")])
-
-        if not novo_caminho:
-            return
-        
-        caminho_imagem = novo_caminho
-
-        img = mostrar_imagem(caminho_imagem,250)
-
-        preview.configure(image=img, text="")
-        preview.image = img
-
-    if personagem_selecionado.get("imagens"):
-
-        img = mostrar_imagem(personagem_selecionado["imagens"], 250)
-
-        preview.configure(image=img, text="")
-        preview.image = img
-
-    preview.bind("<Button-1>", lambda e: trocar_imagem())
-
-    def salvar_edicao():
-        global caminho_imagem
-
-        personagem_selecionado["nome"] = nome.get()
-        personagem_selecionado["personalidade"] = personalidade.get("1.0", "end-1c")
-        personagem_selecionado["aparencia"] = aparencia.get("1.0", "end-1c")
-        personagem_selecionado["historia"] = hispers.get("1.0","end-1c")
-        personagem_selecionado["relacoes"] = relacoes.get("1.0", "end-1c")
-        personagem_selecionado["poderes"] = poderes.get("1.0", "end-1c")
-        personagem_selecionado["fraquezas"] = fraqueza.get("1.0","end-1c")
-        personagem_selecionado["habilidades"] = hapers.get("1.0","end-1c")
-
-
-        if caminho_imagem:
-
-            imagem_antiga = personagem_selecionado.get("imagens")
-
-            extensao = os.path.splitext(caminho_imagem)[1]
-
-            novo_caminho = os.path.join(storage.PASTA_IMAGENS,f"{personagem_selecionado['id']}{extensao}")
-
-            # Copia primeiro
-            shutil.copy2(caminho_imagem, novo_caminho)
-
-            # Apaga a antiga apenas se for diferente da nova
-            if imagem_antiga:
-
-                nome_arquivo = os.path.basename(imagem_antiga)
-
-                if nome_arquivo.startswith(personagem_selecionado["id"]):
-
-                    if os.path.exists(imagem_antiga):
-                        try:
-                            os.remove(imagem_antiga)
-                        except Exception as erro:
-                            print(erro)
-
-
-            personagem_selecionado["imagens"] = novo_caminho
-
-        atualizar_galeria()
-
-        historias.salvar_dados(historias.Historias)
-
-        caminho_imagem = None
-
-        selecionar_personagem(personagem_selecionado)
-
-    def fechar_sem_salvar():
-        confirmar = messagebox.askyesno("Cancelar edição","Deseja sair sem salvar as alterações?")
-
-        if confirmar:
-                selecionar_personagem(personagem_selecionado)
-
-    botao_salvar = ctk.CTkButton(frame_lista_conteudo,text="Salvar",command=lambda: salvar_edicao())
-    botao_salvar.pack(pady=10)
-
-    arearolavel()
-
-    botao_fechar = ctk.CTkButton(frame_lista_conteudo,text="Fechar sem salvar",command=fechar_sem_salvar)
-    botao_fechar.pack(pady=10)
-
-def abrir_galeria_personagem(personagem):
-    limpar_frame_conteudo()
-
-    # IMAGEM PRINCIPAL
-    if personagem.get("imagens"):
-        img_ctk = mostrar_imagem(personagem["imagens"],250)
-
-        label = ctk.CTkLabel(frame_lista_conteudo, image=img_ctk, text="")
-        label.image = img_ctk
-        label.pack(pady=10)
-
-    # GALERIA
-    titulo = ctk.CTkLabel(frame_lista_conteudo,text="Galeria:",font=("Helvetica", 16, "bold"))
-    titulo.pack(pady=10)
-
-    for item in personagem.get("galeria", []):
-
-        if isinstance(item, dict):
-            caminho = item.get("caminho") or item.get("imagem")
-            descricao = item.get("descricao", "")
-        else:
-            caminho = item
-            descricao = ""
-
-            descricao = item.get("descricao", "")
-
-        try:
-            img_ctk = mostrar_imagem(caminho,200)
-
-            frame = ctk.CTkFrame(frame_lista_conteudo)
-            frame.pack(pady=10)
-
-            img_label = ctk.CTkLabel(frame, image=img_ctk, text="")
-            img_label.image = img_ctk
-            img_label.pack()
-
-            desc = ctk.CTkLabel(frame, text=descricao, wraplength=400)
-            desc.pack()
-
-        except Exception as erro:
-            print(f"Erro ao abrir imagem da galeria: {erro}")
 
 def edicao_observacao(*args):
     global observacoes_selecionado
