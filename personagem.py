@@ -278,10 +278,11 @@ class Personagem:
             if caminho and os.path.exists(caminho):
                 try:
                     os.remove(caminho)
+                    historias.atualizar()
                 except Exception as erro:
                     print(f"Erro ao apagar arquivo: {erro}")
 
-            historias.salvar_dados(historias.Historias)
+            historias.atualizar()
             atualizar_galeria()
 
         atualizar_galeria()
@@ -312,9 +313,14 @@ class Personagem:
                     f"{self.personagem_selecionado['id']}{extensao}"
                 )
 
+                caminhos_iguais = (
+                    imagem_antiga
+                    and os.path.abspath(imagem_antiga) == os.path.abspath(novo_caminho)
+                )
+
                 shutil.copy2(self.caminho_imagem, novo_caminho)
 
-                if imagem_antiga:
+                if imagem_antiga and not caminhos_iguais:
                     nome_arquivo = os.path.basename(imagem_antiga)
 
                     if nome_arquivo.startswith(self.personagem_selecionado["id"]):
@@ -326,7 +332,7 @@ class Personagem:
 
                 self.personagem_selecionado["imagens"] = novo_caminho
 
-            historias.salvar_dados(historias.Historias)
+            historias.atualizar()
 
             self.caminho_imagem = None
 
