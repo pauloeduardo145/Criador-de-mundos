@@ -42,8 +42,42 @@ class Personagem:
             return True
         return self.obter_historia_selecionada() is not None
 
+    def _validar_imagem_personagem(self, personagem):
+        alterou = False
+
+        caminho_imagem = personagem.get("imagens")
+
+        if caminho_imagem and not os.path.exists(caminho_imagem):
+            print(f"Imagem não encontrada, removendo referência: {caminho_imagem}")
+            personagem["imagens"] = None
+            alterou = True
+
+        galeria = personagem.get("galeria")
+
+        if galeria:
+            galeria_valida = []
+
+            for item in galeria:
+                caminho = item.get("caminho") if isinstance(item, dict) else item
+
+                if caminho and not os.path.exists(caminho):
+                    print(f"Imagem da galeria não encontrada, removendo referência: {caminho}")
+                    alterou = True
+                    continue
+
+                galeria_valida.append(item)
+
+            personagem["galeria"] = galeria_valida
+
+        if alterou:
+            historias.atualizar()
+
+        return alterou
+
     def selecionar_personagem(self, personagem):
         self.personagem_selecionado = personagem
+
+        self._validar_imagem_personagem(personagem)
 
         self.limpar_frame_conteudo()
 
@@ -108,6 +142,8 @@ class Personagem:
         if not self._historia_selecionada():
             print("Nenhuma história selecionada")
             return
+
+        self._validar_imagem_personagem(self.personagem_selecionado)
 
         self.limpar_frame_conteudo()
 
@@ -359,6 +395,8 @@ class Personagem:
         self.arearolavel()
 
     def abrir_galeria_personagem(self, personagem):
+        self._validar_imagem_personagem(personagem)
+
         self.limpar_frame_conteudo()
 
         if personagem.get("imagens"):
