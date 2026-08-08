@@ -7,6 +7,7 @@ def nova_historia(nome):
         "imagem": "",
         "ultima_edicao": "",
         "capitulos": [],
+        "arcos": [],
         "personagens": [],
         "sistemas_poder": [],
         "observacoes": []
@@ -41,9 +42,10 @@ def nova_observacao(nome,titulo,conteudo):
         "conteudo": conteudo
     }
 
-def novo_capitulo(nome,conteudo):
+def novo_capitulo(nome,arco_id,conteudo):
     return {
         "nome": nome,
+        "arco_id": arco_id,
         "conteudo": conteudo
     }
 
@@ -58,3 +60,10 @@ def novo_sistemapoder(nome,historia,descricao,regras,vantagens,fraquezas):
     "fraquezas": fraquezas,
     "exemplos": []
 }
+
+def novo_arco (nome, historia):
+    return{
+        "id": str(uuid.uuid4()),
+        "nome": nome,
+        "historia_id": historia["id"]
+    }

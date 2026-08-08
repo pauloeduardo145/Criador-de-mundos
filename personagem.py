@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from widgets import mostrar_imagem
+from widgets import mostrar_imagem, mostrar_frame, ocultar_frame, criar_personagem, criar_label_personagem
 from entry_textbox import configurar_entry, configurar_textbox
 from tkinter import filedialog, messagebox
 import os
@@ -10,14 +10,25 @@ import historias
 
 
 class Personagem:
-    def __init__(self, frame_conteudo, obter_historia_selecionada=None):
+    def __init__(self, janela, frame_conteudo, mostrar_no_conteudo, mostrar_cards_com_imagem,
+                 obter_historia_selecionada=None, apos_criar=None):
+
+        self.janela = janela
         self.frame_conteudo = frame_conteudo
-        
+        self.mostrar_no_conteudo = mostrar_no_conteudo
+        self.mostrar_cards_com_imagem = mostrar_cards_com_imagem
+
         self.obter_historia_selecionada = obter_historia_selecionada
+        self.apos_criar = apos_criar
 
         self.personagem_selecionado = None
         self.caminho_imagem = None
 
+        # Estado da janela de criação (formulário "Criar Personagem")
+        self.caminho_imagem_criacao = None
+        self.galeria_imagens_criacao = None
+
+        self._criar_janela_criacao()
 
     def limpar_frame_conteudo(self):
         for widget in self.frame_conteudo.winfo_children():
@@ -39,8 +50,8 @@ class Personagem:
 
     def _historia_selecionada(self):
         if self.obter_historia_selecionada is None:
-            return True
-        return self.obter_historia_selecionada() is not None
+            return None
+        return self.obter_historia_selecionada()
 
     def _validar_imagem_personagem(self, personagem):
         alterou = False
@@ -129,8 +140,6 @@ class Personagem:
         )
         edit.grid(row=1, column=0, columnspan=2, pady=10)
 
-        print(personagem["nome"])
-
     def edicao_personagem(self, *args):
         if self.personagem_selecionado is None:
             print("Nenhum personagem selecionado")
@@ -139,7 +148,7 @@ class Personagem:
         if "galeria" not in self.personagem_selecionado:
             self.personagem_selecionado["galeria"] = []
 
-        if not self._historia_selecionada():
+        if self._historia_selecionada() is None:
             print("Nenhuma história selecionada")
             return
 
@@ -435,3 +444,289 @@ class Personagem:
 
             except Exception as erro:
                 print(f"Erro ao abrir imagem da galeria: {erro}")
+
+    # ---------- Listagens (usadas pela navegação principal) ----------
+
+    def _aviso_sem_historia(self):
+        self.limpar_frame_conteudo()
+
+        ctk.CTkLabel(
+            self.frame_conteudo,
+            text="📖 Nenhuma história selecionada.\nCrie ou selecione uma história para continuar.",
+            font=("Helvetica", 18),
+            justify="center"
+        ).pack(expand=True)
+
+    def mostrar_todos(self, event=None):
+        historia = self._historia_selecionada()
+
+        if historia is None:
+            self._aviso_sem_historia()
+            return
+
+        personagens = historia.get("personagens", [])
+
+        self.limpar_frame_conteudo()
+
+        titulo = ctk.CTkLabel(
+            self.frame_conteudo,
+            text=f"📂 Todos os Personagens ({len(personagens)})",
+            font=("Helvetica", 18, "bold")
+        )
+        titulo.pack(pady=10, anchor="w", padx=20)
+
+        self.mostrar_no_conteudo(self.frame_conteudo, personagens, self.selecionar_personagem, "nome", 6, 6)
+
+    def mostrar_todas_imagens(self, event=None):
+        historia = self._historia_selecionada()
+
+        if historia is None:
+            self._aviso_sem_historia()
+            return
+
+        self.limpar_frame_conteudo()
+
+        personagens_com_imagem = [
+            p for p in historia["personagens"]
+            if p.get("imagens")
+        ]
+
+        titulo = ctk.CTkLabel(
+            self.frame_conteudo,
+            text=f"🖼️ Todas as Imagens ({len(personagens_com_imagem)})",
+            font=("Helvetica", 18, "bold")
+        )
+        titulo.pack(pady=10, anchor="w", padx=20)
+
+        self.mostrar_cards_com_imagem(self.frame_conteudo, personagens_com_imagem, self.selecionar_personagem)
+
+    def mostrar_todas_imagens_da_galeria(self, event=None):
+        historia = self._historia_selecionada()
+
+        if historia is None:
+            self._aviso_sem_historia()
+            return
+
+        self.limpar_frame_conteudo()
+
+        personagens = [
+            p for p in historia["personagens"]
+            if len(p.get("galeria", [])) > 0
+        ]
+
+        titulo = ctk.CTkLabel(
+            self.frame_conteudo,
+            text=f"Personagens com Galeria ({len(personagens)})",
+            font=("Helvetica", 18, "bold")
+        )
+        titulo.pack(pady=10)
+
+        for personagem in personagens:
+            btn = ctk.CTkButton(
+                self.frame_conteudo, text=personagem["nome"],
+                command=lambda p=personagem: self.abrir_galeria_personagem(p)
+            )
+            btn.pack(pady=5)
+
+    # ---------- Exclusão ----------
+
+    def excluir(self, nome):
+        historia = self._historia_selecionada()
+
+        if historia is None:
+            return
+
+        personagem = next(
+            (p for p in historia["personagens"] if p["nome"] == nome),
+            None
+        )
+
+        if personagem is None:
+            return
+
+        if not messagebox.askyesno(
+            "Excluir", f'Deseja realmente excluir o personagem "{nome}"?'
+        ):
+            return
+
+        historia["personagens"].remove(personagem)
+
+        historias.atualizar()
+
+        if self.apos_criar:
+            self.apos_criar(historia)
+
+    # ---------- Janela "Criar Personagem" ----------
+
+    def abrir_criacao(self):
+        if self._historia_selecionada() is None:
+            print("Selecione a historia primeiro")
+            return
+
+        mostrar_frame(self.janela_criacao)
+        self.janela_criacao.focus()
+
+    def _escolher_imagem_principal(self):
+        caminho = filedialog.askopenfilename(
+            title="Selecione uma imagem",
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"), ("Todos os arquivos", "*.*")]
+        )
+
+        if not caminho:
+            return
+
+        self.caminho_imagem_criacao = caminho
+
+        img_ctk = mostrar_imagem(caminho, 250)
+        self.preview_criacao.configure(image=img_ctk, text="")
+        self.preview_criacao.image = img_ctk
+
+    def _adicionar_imagem_galeria_criacao(self):
+        caminho = filedialog.askopenfilename(
+            title="Selecione uma imagem",
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"), ("Todos os arquivos", "*.*")]
+        )
+
+        if not caminho:
+            return
+
+        janela_desc = ctk.CTkInputDialog(text="Digite a descrição da imagem:", title="Descrição da Galeria")
+        descricao = janela_desc.get_input()
+
+        if descricao is None:
+            descricao = ""
+
+        extensao = os.path.splitext(caminho)[1]
+        nome_arquivo = f"{uuid.uuid4()}{extensao}"
+        novo_caminho = os.path.join(storage.PASTA_GALERIA, nome_arquivo)
+
+        shutil.copy2(caminho, novo_caminho)
+
+        if self.galeria_imagens_criacao is None:
+            self.galeria_imagens_criacao = []
+
+        self.galeria_imagens_criacao.append({"caminho": novo_caminho, "descricao": descricao})
+
+    def _salvar_criacao(self):
+        historia = self._historia_selecionada()
+
+        if historia is None:
+            print("Nenhuma história selecionada")
+            return
+
+        novo = criar_personagem(
+            historia,
+            self.personame_criacao.get(),
+            self.caminho_imagem_criacao,
+            self.personalidade_criacao.get("1.0", "end-1c"),
+            self.aparencia_criacao.get("1.0", "end-1c"),
+            self.relacoes_criacao.get("1.0", "end-1c"),
+            self.historia_criacao.get("1.0", "end-1c"),
+            self.poderes_criacao.get("1.0", "end-1c"),
+            self.fraquezas_criacao.get("1.0", "end-1c"),
+            self.habilidades_criacao.get("1.0", "end-1c")
+        )
+
+        if self.galeria_imagens_criacao is not None:
+            novo["galeria"] = self.galeria_imagens_criacao.copy()
+        else:
+            novo["galeria"] = []
+
+        if self.caminho_imagem_criacao:
+            extensao = os.path.splitext(self.caminho_imagem_criacao)[1]
+            novo_caminho = os.path.join(storage.PASTA_IMAGENS, f"{novo['id']}{extensao}")
+            shutil.copy2(self.caminho_imagem_criacao, novo_caminho)
+            novo["imagens"] = novo_caminho
+
+        if novo:
+            criar_label_personagem(novo, self.frame_conteudo, self.selecionar_personagem)
+
+            if self.apos_criar:
+                self.apos_criar(historia)
+
+            ocultar_frame(self.janela_criacao)
+
+            self.caminho_imagem_criacao = None
+            self.galeria_imagens_criacao = None
+
+    def _criar_janela_criacao(self):
+        self.janela_criacao = ctk.CTkFrame(self.janela, width=600, height=500)
+        self.janela_criacao.grid_propagate(False)
+        self.janela_criacao.grid_columnconfigure(0, weight=1)
+        self.janela_criacao.grid_columnconfigure(1, weight=0)
+        self.janela_criacao.grid_columnconfigure(2, weight=1)
+        self.janela_criacao.grid_rowconfigure(0, weight=1)
+        self.janela_criacao.grid_rowconfigure(1, weight=1)
+        self.janela_criacao.grid_rowconfigure(2, weight=1)
+        self.janela_criacao.grid_rowconfigure(3, weight=0)
+        self.janela_criacao.grid_rowconfigure(4, weight=0)
+        self.janela_criacao.grid_rowconfigure(5, weight=1)
+        self.janela_criacao.grid_rowconfigure(6, weight=1)
+
+        self.janela_criacao.place(relx=0.5, rely=0.5, anchor="center")
+        self.janela_criacao.place_forget()
+
+        def enter_personagem(event):
+            self._salvar_criacao()
+
+        self.preview_criacao = ctk.CTkLabel(self.janela_criacao, text="[Clique para importar imagem principal]")
+        self.preview_criacao.grid(column=0, row=3, rowspan=3)
+        self.preview_criacao.bind("<Button-1>", lambda e: self._escolher_imagem_principal())
+
+        ctk.CTkLabel(self.janela_criacao, text="Nome: ").grid(column=1, row=0)
+
+        self.personame_criacao = ctk.CTkEntry(self.janela_criacao, placeholder_text="Insira o nome do personagem")
+        self.personame_criacao.bind("<Return>", enter_personagem)
+        self.personame_criacao.grid(column=2, row=0, sticky="we")
+        configurar_entry(self.personame_criacao)
+
+        ctk.CTkLabel(self.janela_criacao, text="Personalidade: ").grid(column=1, row=1)
+        self.personalidade_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.personalidade_criacao.grid(column=2, row=1, sticky="we")
+        configurar_textbox(self.personalidade_criacao)
+
+        ctk.CTkLabel(self.janela_criacao, text="Aparencia: ").grid(column=1, row=2)
+        self.aparencia_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.aparencia_criacao.grid(column=2, row=2, sticky="we")
+        configurar_textbox(self.aparencia_criacao)
+
+        ctk.CTkLabel(self.janela_criacao, text="Relações").grid(column=1, row=3)
+        self.relacoes_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.relacoes_criacao.grid(column=2, row=3, sticky="we")
+        configurar_textbox(self.relacoes_criacao)
+
+        ctk.CTkLabel(
+            self.janela_criacao,
+            text="Separe com ';', Ex: Esposa de X; Amiga de X",
+            font=("Helvetica", 11)
+        ).grid(column=2, row=4, sticky="w")
+
+        ctk.CTkLabel(self.janela_criacao, text="Historia do personagem").grid(column=1, row=5)
+        self.historia_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.historia_criacao.grid(column=2, row=5, sticky="we")
+        configurar_textbox(self.historia_criacao)
+
+        ctk.CTkLabel(self.janela_criacao, text="Poderes:").grid(column=1, row=6)
+        self.poderes_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.poderes_criacao.grid(column=2, row=6, sticky="we")
+        configurar_textbox(self.poderes_criacao)
+
+        ctk.CTkLabel(self.janela_criacao, text="Fraquezas:").grid(column=1, row=7)
+        self.fraquezas_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.fraquezas_criacao.grid(column=2, row=7, sticky="we")
+        configurar_textbox(self.fraquezas_criacao)
+
+        ctk.CTkLabel(self.janela_criacao, text="Habilidades do personagem").grid(column=1, row=8)
+        self.habilidades_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
+        self.habilidades_criacao.grid(column=2, row=8, sticky="we")
+        configurar_textbox(self.habilidades_criacao)
+
+        ctk.CTkButton(
+            self.janela_criacao, text="[Fechar]",
+            command=lambda: ocultar_frame(self.janela_criacao)
+        ).grid(column=1, row=9, sticky="se", pady=10, padx=10)
+
+        ctk.CTkButton(
+            self.janela_criacao, text="[Salvar Personagem]",
+            command=lambda: self._salvar_criacao()
+        ).grid(column=2, row=9, sticky="se", pady=10, padx=10)

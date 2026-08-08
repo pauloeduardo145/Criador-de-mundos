@@ -13,19 +13,10 @@ def _check_if_valid_scroll_patched(self, widget):
 
 CTkScrollableFrame._check_if_valid_scroll = _check_if_valid_scroll_patched
 
-historia_selecionada = None
-personagem_selecionado = None
-caminho_imagem = None
-galeria_imagens = None
-
 from widgets import *
 import historias
-import uuid
-from tkinter import filedialog
 from datetime import datetime
-import shutil
 import os
-import storage
 from tkinter import messagebox
 
 ctk.set_appearance_mode("dark")
@@ -35,12 +26,8 @@ historico = []
 data_atual = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 historia_selecionada = None
-capitulo_selecionado = None
-personagem_selecionado = None
 sistema_de_poder_selecionado = None
 observacao_selecionada = None
-caminho_imagem = None
-galeria_imagens = None
 
 def histOria(frame):
     if historia_selecionada is None:
@@ -115,17 +102,20 @@ frame_lista_conteudo.grid(column=0,row=2,columnspan=5, sticky="nsew",padx=10)
 frame_botoes = ctk.CTkFrame(frame_conteudo,height=35)
 frame_botoes.grid(column=0,row=3,sticky="w",padx=10,pady=5)
 
-Addper = ctk.CTkButton(frame_botoes,height=25,text="[Criar Personagem]",command=lambda:histOria(janepers))
+Addper = ctk.CTkButton(frame_botoes,height=25,text="[Criar Personagem]",command=lambda: gerenciador_personagem.abrir_criacao())
 Addper.grid(column=0,row=3,sticky="w",padx=10,pady=10)
 
-capitadic = ctk.CTkButton(frame_botoes,height=25,text="[Criar Capitulo]",command=lambda:histOria(janecapi))
-capitadic.grid(column=1,row=3,sticky="w",padx=10,pady=10)
+Addarco = ctk.CTkButton(frame_botoes,height=25,text="[Criar Arco]",command=lambda: gerenciador_arco.abrir_criacao())
+Addarco.grid(column=1,row=3,sticky="w",padx=10,pady=10)
+
+capitadic = ctk.CTkButton(frame_botoes,height=25,text="[Criar Capitulo]",command=lambda: gerenciador_capitulo.abrir_criacao())
+capitadic.grid(column=2,row=3,sticky="w",padx=10,pady=10)
 
 Addposis = ctk.CTkButton(frame_botoes,text="[Criar Sistema de Poder]",command=lambda: histOria(janesispoder))
-Addposis.grid(column=2,row=3,)
+Addposis.grid(column=3,row=3,)
 
-Addobs = ctk.CTkButton(frame_botoes,text="[Adicionar observações]", command=lambda: (atualizar_optionmenu_personagens(),histOria(janeobser)))
-Addobs.grid(column=3,row=3, sticky="w",padx=10,pady=10)
+Addobs = ctk.CTkButton(frame_botoes,text="[Adicionar observação]", command=lambda: (atualizar_optionmenu_personagens(),histOria(janeobser)))
+Addobs.grid(column=4,row=3, sticky="w",padx=10,pady=10)
 
 #HISTORIAS
 
@@ -179,6 +169,9 @@ lista.grid(column=0,row=2,sticky="n",padx=10,pady=5)
 nome_historia = ctk.CTkLabel(lista,text='Nome:')
 nome_historia.grid(column=0,row=0,sticky="w",padx=10,pady=5)
 
+arc = ctk.CTkLabel(lista,text='Arcos:')
+arc.grid(column=0,row=1,sticky="w",padx=10,pady=5)
+
 cap = ctk.CTkLabel(lista,text='Capitulos:')
 cap.grid(column=0,row=2,sticky="w",padx=10,pady=5)
 
@@ -211,29 +204,7 @@ def arearolavel():
 
 from entry_textbox import configurar_entry,configurar_textbox
 
-##MOSTRAR NO CONTEUDO
-
-#PERSONAGEM
-
-from personagem import Personagem
-
-gerenciador_personagem = Personagem(
-    frame_lista_conteudo,
-    obter_historia_selecionada=lambda: historia_selecionada
-)
-
-def selecionar_personagem(personagem):
-    global personagem_selecionado
-    personagem_selecionado = personagem
-    gerenciador_personagem.selecionar_personagem(personagem)
-
-def edicao_personagem(*args):
-    gerenciador_personagem.edicao_personagem()
-
-def abrir_galeria_personagem(personagem):
-    gerenciador_personagem.abrir_galeria_personagem(personagem)
-
-# CAPITULO
+#FUNÇÕES GENÉRICAS DE LISTAGEM (usadas por Personagem, Capítulo, Sistema de Poder e Observações)
 
 def mostrar_cards_com_imagem(frame,itens,callback,chave_imagem="imagens",chave_nome="nome",tamanho=150):
 
@@ -274,7 +245,7 @@ def mostrar_cards_com_imagem(frame,itens,callback,chave_imagem="imagens",chave_n
         except Exception as erro:
             print(f"Erro ao carregar {item[chave_nome]}: {erro}")
 
-def mostrar_no_conteudo(frame, itens, callback, chave_nome):
+def mostrar_no_conteudo(frame, itens, callback, chave_nome,li,col):
 
     grid = ctk.CTkFrame(frame, fg_color="transparent")
     grid.pack(fill="both", expand=True, padx=20)
@@ -284,8 +255,8 @@ def mostrar_no_conteudo(frame, itens, callback, chave_nome):
 
     for indice, item in enumerate(itens):
 
-        linha = indice // 6
-        coluna = indice % 6
+        linha = indice // li
+        coluna = indice % col
 
         ctk.CTkButton(
             grid,
@@ -293,6 +264,64 @@ def mostrar_no_conteudo(frame, itens, callback, chave_nome):
             height=40,
             command=lambda i=item: navegar(callback, i)
         ).grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
+
+#GERENCIADORES (ARCO, CAPITULO, PERSONAGEM)
+
+from arco import Arco
+from capitulo import Capitulo
+from personagem import Personagem
+
+gerenciador_arco = Arco(
+    janela,
+    frame_lista_conteudo,
+    obter_historia_selecionada=lambda: historia_selecionada,
+    apos_criar=lambda h: selecionar_historia(h)
+)
+
+gerenciador_capitulo = Capitulo(
+    janela,
+    frame_lista_conteudo,
+    mostrar_no_conteudo,
+    gerenciador_arco,
+    obter_historia_selecionada=lambda: historia_selecionada,
+    apos_criar=lambda h: selecionar_historia(h)
+)
+
+gerenciador_personagem = Personagem(
+    janela,
+    frame_lista_conteudo,
+    mostrar_no_conteudo,
+    mostrar_cards_com_imagem,
+    obter_historia_selecionada=lambda: historia_selecionada,
+    apos_criar=lambda h: selecionar_historia(h)
+)
+
+def selecionar_personagem(personagem):
+    gerenciador_personagem.selecionar_personagem(personagem)
+
+def edicao_personagem(*args):
+    gerenciador_personagem.edicao_personagem()
+
+def abrir_galeria_personagem(personagem):
+    gerenciador_personagem.abrir_galeria_personagem(personagem)
+
+def mostrar_todos_personagens(event=None):
+    gerenciador_personagem.mostrar_todos(event)
+
+def mostrar_todas_imagens(event=None):
+    gerenciador_personagem.mostrar_todas_imagens(event)
+
+def mostrar_todas_imagens_da_galeria(event=None):
+    gerenciador_personagem.mostrar_todas_imagens_da_galeria(event)
+
+def selecionar_capitulo(capitulo):
+    gerenciador_capitulo.selecionar_capitulo(capitulo)
+
+def edicao_capitulo(*args):
+    gerenciador_capitulo.edicao_capitulo()
+
+def mostrar_todos_capitulos(event=None):
+    gerenciador_capitulo.mostrar_todos(event)
 
 #RECEBER INFORMAÇÕES DA HISTORIA SELECIONADA
 
@@ -318,6 +347,13 @@ def selecionar_historia(historia):
 
     nome_historia.configure(text=f"Nome: {historia['nome']}")
 
+    qtdarco = len(historia["arcos"])
+
+    if qtdarco <= 1:
+        arc.configure(text=f"Arco: {len(historia["arcos"])}")
+    else:
+        arc.configure(text=f"Arcos: {len(historia["arcos"])}")
+
     qtd = len(historia['capitulos'])
 
     if qtd == 1:
@@ -337,158 +373,26 @@ def selecionar_historia(historia):
 
     limpar_frame_conteudo()
 
-    mostrar_no_conteudo(frame_lista_conteudo,historia["personagens"],selecionar_personagem,"nome")
+    mostrar_no_conteudo(frame_lista_conteudo,historia["personagens"],selecionar_personagem,"nome",6,6)
 
-    mostrar_no_conteudo(frame_lista_conteudo,historia["capitulos"],selecionar_capitulo,"nome")
+    mostrar_no_conteudo(frame_lista_conteudo,historia["capitulos"],selecionar_capitulo,"nome",6,6)
 
-    mostrar_no_conteudo(frame_lista_conteudo,historia["sistemas_poder"],selecionar_sistemapoder,"nome")
+    mostrar_no_conteudo(frame_lista_conteudo,historia["sistemas_poder"],selecionar_sistemapoder,"nome",6,6)
 
-    mostrar_no_conteudo(frame_lista_conteudo,historia["observacoes"],selecionar_observacoes,"titulo")
-
-#MOSTRAR TODOS...
-
-def mostrar_todas_imagens_da_galeria(event=None):
-
-    if historia_selecionada is None:
-
-        limpar_frame_conteudo()
-
-        ctk.CTkLabel(
-            frame_lista_conteudo,
-            text="📖 Nenhuma história selecionada.\nCrie ou selecione uma história para continuar.",
-            font=("Helvetica", 18),
-            justify="center"
-        ).pack(expand=True)
-        return
-
-    limpar_frame_conteudo()
-
-    personagens = [
-        p for p in historia_selecionada["personagens"]
-        if len(p.get("galeria", [])) > 0
-    ]
-
-    titulo = ctk.CTkLabel(frame_lista_conteudo,text=f"Personagens com Galeria ({len(personagens)})",font=("Helvetica", 18, "bold"))
-    titulo.pack(pady=10)
-
-    for personagem in personagens:
-        btn = ctk.CTkButton(frame_lista_conteudo,text=personagem["nome"],command=lambda p=personagem: abrir_galeria_personagem(p))
-        btn.pack(pady=5)
-
-def mostrar_todos_personagens(event=None):
-
-    if historia_selecionada is None:
-
-        limpar_frame_conteudo()
-
-        ctk.CTkLabel(
-            frame_lista_conteudo,
-            text="📖 Nenhuma história selecionada.\nCrie ou selecione uma história para continuar.",
-            font=("Helvetica", 18),
-            justify="center"
-        ).pack(expand=True)
-        return
-
-    personagens = historia_selecionada.get("personagens", [])
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um título para a seção
-    titulo = ctk.CTkLabel(frame_lista_conteudo,text=f"📂 Todos os Personagens ({len(personagens)})",font=("Helvetica", 18, "bold"))
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    mostrar_no_conteudo(frame_lista_conteudo,personagens,selecionar_personagem,"nome")
-
-def mostrar_todos_capitulos(event=None):
-    if historia_selecionada is None:
-
-        limpar_frame_conteudo()
-
-        ctk.CTkLabel(
-            frame_lista_conteudo,
-            text="📖 Nenhuma história selecionada.\nCrie ou selecione uma história para continuar.",
-            font=("Helvetica", 18),
-            justify="center"
-        ).pack(expand=True)
-        return
-
-    capitulo = historia_selecionada.get("capitulos", [])
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um título para a seção
-    titulo = ctk.CTkLabel(
-        frame_lista_conteudo,
-        text=f"📂 Todos os Capitulos ({len(capitulo)})",
-        font=("Helvetica", 18, "bold")
-    )
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    mostrar_no_conteudo(frame_lista_conteudo,capitulo,selecionar_capitulo,"nome")
-
-def mostrar_todas_imagens(event=None):
-
-    if historia_selecionada is None:
-
-        limpar_frame_conteudo()
-
-        ctk.CTkLabel(
-            frame_lista_conteudo,
-            text="📖 Nenhuma história selecionada.\nCrie ou selecione uma história para continuar.",
-            font=("Helvetica", 18),
-            justify="center"
-        ).pack(expand=True)
-        return
-
-    limpar_frame_conteudo()
-
-    personagens_com_imagem = [
-        p for p in historia_selecionada["personagens"]
-        if p.get("imagens")
-    ]
-
-    titulo = ctk.CTkLabel(
-        frame_lista_conteudo,
-        text=f"🖼️ Todas as Imagens ({len(personagens_com_imagem)})",
-        font=("Helvetica", 18, "bold")
-    )
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    mostrar_cards_com_imagem(frame_lista_conteudo,personagens_com_imagem,selecionar_personagem)
+    mostrar_no_conteudo(frame_lista_conteudo,historia["observacoes"],selecionar_observacoes,"titulo",6,6)
 
 #SELECIONAR ...
 
-def selecionar_capitulo(capitulo):
-    global capitulo_selecionado
+def selecionar_observacoes(observacao):
+    global observacao_selecionada
 
-    capitulo_selecionado = capitulo
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um label para o personagem
-    for chave, valor in capitulo.items():
-        ctk.CTkLabel(frame_lista_conteudo,text=f"{chave}:").pack(anchor="w",padx=10)
-
-        ctk.CTkLabel(frame_lista_conteudo,text=str(valor),wraplength=900,justify="left").pack(anchor="w",padx=10)
-
-    print(capitulo["nome"])
-
-    edit = ctk.CTkButton(frame_lista_conteudo,text="Editar", command=lambda *args: edicao_capitulo())
-    edit.pack(pady=10)
-
-def selecionar_observacoes(observa):
-    global observacoes_selecionado
-
-    observacoes_selecionado = observa
+    observacao_selecionada = observacao
 
     # 1. Limpa o frame central para remover o que estava antes
     limpar_frame_conteudo()
 
     # 2. Cria um label para o sistema de poder
-    for chave, valor in observa.items():
+    for chave, valor in observacao.items():
 
         ctk.CTkLabel(frame_lista_conteudo,text=f"{chave}:").pack(anchor="w",padx=10)
         
@@ -499,85 +403,14 @@ def selecionar_observacoes(observa):
 
 #EDIÇÃO
 
-def edicao_capitulo(*args):
-    global capitulo_selecionado
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    limpar_frame_conteudo()
-
-    titulo = ctk.CTkLabel(
-        frame_lista_conteudo,
-        text=f"Modo Edição",
-        font=("Helvetica", 18, "bold"))
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    nome = ctk.CTkEntry(frame_lista_conteudo)
-    nome.insert(0, capitulo_selecionado["nome"])
-    nome.pack(fill="x", padx=10, pady=5)
-    configurar_entry(nome)
-
-    ALTURA_MIN = 80
-    ALTURA_MAX = 375  # a partir daqui, a rolagem interna assume o controle
-
-    def ajustar_altura(event=None):
-        widget = conteudos
-        widget.update_idletasks()
-
-        # conta linhas EXIBIDAS (respeita o wrap="word"), não só quebras "\n"
-        resultado = widget._textbox.count("1.0", "end", "displaylines")
-        linhas = int(resultado[0]) if resultado else 1
-
-        altura_por_linha = 21  # aproximação para a fonte padrão do CTkTextbox
-        altura_desejada = linhas * altura_por_linha + 20  # + respiro
-
-        nova_altura = max(ALTURA_MIN, min(altura_desejada, ALTURA_MAX))
-        widget.configure(height=nova_altura)
-
-        widget.edit_modified(False)
-
-    conteudos = ctk.CTkTextbox(
-        frame_lista_conteudo,
-        wrap="word",
-        activate_scrollbars=True  # só entra em ação quando bater no limite
-    )
-    conteudos.pack(fill="x", padx=10, pady=5)
-    configurar_textbox(conteudos)
-    conteudos.insert("1.0", capitulo_selecionado["conteudo"])
-
-    ajustar_altura()
-    conteudos.bind("<<Modified>>", ajustar_altura)
-
-    def salvar_edicao():
-        capitulo_selecionado["nome"] = nome.get()
-        capitulo_selecionado["conteudo"] = conteudos.get("1.0", "end-1c")
-        historias.salvar_dados(historias.Historias)
-        selecionar_capitulo(capitulo_selecionado)
-
-    botao_salvar = ctk.CTkButton(frame_lista_conteudo, text="Salvar", command=lambda *args: salvar_edicao())
-    botao_salvar.pack(pady=10)
-
-    contador = ctk.CTkLabel(frame_lista_conteudo, text="0 caracteres")
-    contador.pack(padx=100)
-
-    def atualizar(event=None):
-        texto = conteudos.get("1.0", "end-1c")
-        contador.configure(text=f"{len(texto)} caracteres")
-
-    conteudos.bind("<KeyRelease>", atualizar)
-
-    arearolavel()
-
 def edicao_observacao(*args):
-    global observacoes_selecionado
+    global observacao_selecionada
 
     if historia_selecionada is None:
         print("Nenhuma história selecionada")
         return
 
-    if observacoes_selecionado is None:
+    if observacao_selecionada is None:
         print("Nenhuma observação selecionada")
         return
 
@@ -596,7 +429,7 @@ def edicao_observacao(*args):
     ctk.CTkLabel(frame_lista_conteudo, text="Relação:").pack(padx=10, pady=5)
 
     relacao = ctk.CTkEntry(frame_lista_conteudo)
-    relacao.insert(0, observacoes_selecionado.get("relacao", ""))
+    relacao.insert(0, observacao_selecionada.get("relacao", ""))
     relacao.pack(fill="x", padx=10, pady=5)
     configurar_entry(relacao)
 
@@ -604,7 +437,7 @@ def edicao_observacao(*args):
     ctk.CTkLabel(frame_lista_conteudo, text="Título:").pack(padx=10, pady=5)
 
     titulo_obs = ctk.CTkEntry(frame_lista_conteudo)
-    titulo_obs.insert(0, observacoes_selecionado.get("titulo", ""))
+    titulo_obs.insert(0, observacao_selecionada.get("titulo", ""))
     titulo_obs.pack(fill="x", padx=10, pady=5)
     configurar_entry(titulo_obs)
 
@@ -612,19 +445,19 @@ def edicao_observacao(*args):
     ctk.CTkLabel(frame_lista_conteudo, text="Conteúdo:").pack(padx=10, pady=5)
 
     conteudo = ctk.CTkTextbox(frame_lista_conteudo, height=150)
-    conteudo.insert("1.0", observacoes_selecionado.get("conteudo", ""))
+    conteudo.insert("1.0", observacao_selecionada.get("conteudo", ""))
     conteudo.pack(fill="both", expand=True, padx=10, pady=5)
     configurar_textbox(conteudo)
 
     def salvar_edicao():
 
-        observacoes_selecionado["relacao"] = relacao.get()
-        observacoes_selecionado["titulo"] = titulo_obs.get()
-        observacoes_selecionado["conteudo"] = conteudo.get("1.0", "end-1c")
+        observacao_selecionada["relacao"] = relacao.get()
+        observacao_selecionada["titulo"] = titulo_obs.get()
+        observacao_selecionada["conteudo"] = conteudo.get("1.0", "end-1c")
 
         historias.salvar_dados(historias.Historias)
 
-        selecionar_observacoes(observacoes_selecionado)
+        selecionar_observacoes(observacao_selecionada)
 
     def fechar_sem_salvar():
         confirmar = messagebox.askyesno(
@@ -633,7 +466,7 @@ def edicao_observacao(*args):
         )
 
         if confirmar:
-            selecionar_observacoes(observacoes_selecionado)
+            selecionar_observacoes(observacao_selecionada)
 
     # Botões
     ctk.CTkButton(
@@ -649,48 +482,6 @@ def edicao_observacao(*args):
     ).pack(pady=10)
 
 #EXCLUIR
-
-def excluir_personagem(nome):
-
-    personagem = next(
-        (p for p in historia_selecionada["personagens"] if p["nome"] == nome),
-        None
-    )
-
-    if personagem is None:
-        return
-
-    if not messagebox.askyesno(
-        "Excluir",
-        f'Deseja realmente excluir o personagem "{nome}"?'
-    ):
-        return
-
-    historia_selecionada["personagens"].remove(personagem)
-
-    historias.salvar_dados(historias.Historias)
-    selecionar_historia(historia_selecionada)
-
-def excluir_capitulo(nome):
-
-    capitulo = next(
-        (c for c in historia_selecionada["capitulos"] if c["nome"] == nome),
-        None
-    )
-
-    if capitulo is None:
-        return
-
-    if not messagebox.askyesno(
-        "Excluir",
-        f'Deseja realmente excluir o capítulo "{nome}"?'
-    ):
-        return
-
-    historia_selecionada["capitulos"].remove(capitulo)
-
-    historias.salvar_dados(historias.Historias)
-    selecionar_historia(historia_selecionada)
 
 def excluir_observacao(titulo):
 
@@ -757,7 +548,10 @@ def excluir_item(*args):
             itens = [p["nome"] for p in historia_selecionada["personagens"]]
 
         elif opcao == "História":
-            itens = [historia_selecionada["nome"]]
+            itens = [h["nome"] for h in historias.Historias]
+
+        elif opcao == "Arco":
+            itens = [a["nome"] for a in historia_selecionada["arcos"]]
 
         elif opcao == "Capítulo":
             itens = [c["nome"] for c in historia_selecionada["capitulos"]]
@@ -790,10 +584,13 @@ def excluir_item(*args):
         item = item_var.get()
 
         if tipo == "Personagem":
-            excluir_personagem(item)
+            gerenciador_personagem.excluir(item)
+
+        elif tipo == "Arco":
+            gerenciador_arco.excluir(item)
 
         elif tipo == "Capítulo":
-            excluir_capitulo(item)
+            gerenciador_capitulo.excluir(item)
 
         elif tipo == "Observação":
             excluir_observacao(item)
@@ -806,6 +603,7 @@ def excluir_item(*args):
         values=[
             "Personagem",
             "História",
+            "Arco",
             "Capítulo",
             "Observação"
         ],
@@ -820,6 +618,7 @@ def excluir_item(*args):
         text="Excluir",
         command=confirmar_exclusao
     ).pack(pady=15)
+
 #CAIXA
 
 from perfil import Perfil
@@ -864,262 +663,7 @@ criar_h.grid(column=1,row=3,padx=5,pady=10,sticky="s")
 f = ctk.CTkButton(frame_nomeh,text="Fechar",command=lambda: ocultar_frame(frame_nomeh))
 f.grid(column=0,row=3,padx=5)
 
-#JANELA CRIAR PERSONAGEM (ESTA CONCLUIDO).
-
-def salvar_personagem():
-    global caminho_imagem
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    novo = criar_personagem(
-    historia_selecionada,
-    personame.get(),
-    caminho_imagem,
-    
-    personapersona.get("1.0","end-1c"),
-    persoapare.get("1.0","end-1c"),
-    relaca.get("1.0","end-1c"),
-    hispertex.get("1.0","end-1c"),
-    poderes.get("1.0","end-1c"),
-    fraquezas.get("1.0","end-1c"),
-    habpertex.get("1.0","end-1c")
-    )
-
-    if galeria_imagens is not None:
-        novo["galeria"] = galeria_imagens.copy()
-    else:
-        novo["galeria"] = []
-
-    if caminho_imagem:
-        extensao = os.path.splitext(caminho_imagem)[1]
-
-        novo_caminho = os.path.join(storage.PASTA_IMAGENS,f"{novo['id']}{extensao}")
-
-        shutil.copy2(caminho_imagem, novo_caminho)
-
-        novo["imagens"] = novo_caminho
-
-    if novo:
-        criar_label_personagem(novo,frame_lista_conteudo,selecionar_personagem)
-
-        selecionar_historia(historia_selecionada)
-        ocultar_frame(janepers)
-
-def enter_personagem(event):
-    salvar_personagem()
-
-janepers = ctk.CTkFrame(janela,width=600,height=500)
-janepers.grid_propagate(False)
-janepers.grid_columnconfigure(0, weight=1)
-janepers.grid_columnconfigure(1, weight=0)
-janepers.grid_columnconfigure(2, weight=1)
-janepers.grid_rowconfigure(0,weight=1)
-janepers.grid_rowconfigure(1,weight=1)
-janepers.grid_rowconfigure(2,weight=1)
-janepers.grid_rowconfigure(3,weight=0)
-janepers.grid_rowconfigure(4,weight=0)
-janepers.grid_rowconfigure(5,weight=1)
-janepers.grid_rowconfigure(6,weight=1)
-
-janepers.place(relx=0.5, rely=0.5, anchor="center")
-janepers.place_forget()
-
-def imagem():
-    global caminho_imagem
-
-    caminho_imagem = filedialog.askopenfilename(title="Selecione uma imagem",filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),("Todos os arquivos", "*.*")])
-
-    if not caminho_imagem:
-        return
-
-    img_ctk = mostrar_imagem(caminho_imagem,250)
-
-    preview.configure(image=img_ctk, text="")
-    preview.image = img_ctk
-
-def adicionar_imagem():
-    galeria_imagens.append(caminho_imagem)
-
-def galeria():
-    global galeria_imagens
-
-    caminho = filedialog.askopenfilename(
-        title="Selecione uma imagem",
-        filetypes=[
-            ("Imagens", "*.png *.jpg *.jpeg *.webp"),
-            ("Todos os arquivos", "*.*")
-        ]
-    )
-
-    if not caminho:
-        return
-
-    janela_desc = ctk.CTkInputDialog(
-        text="Digite a descrição da imagem:",
-        title="Descrição da Galeria"
-    )
-
-    descricao = janela_desc.get_input()
-
-    if descricao is None:
-        descricao = ""
-
-    extensao = os.path.splitext(caminho)[1]
-
-    nome_arquivo = f"{uuid.uuid4()}{extensao}"
-
-    novo_caminho = os.path.join(
-        storage.PASTA_GALERIA,
-        nome_arquivo
-    )
-
-    shutil.copy2(caminho, novo_caminho)
-
-    if galeria_imagens is None:
-        galeria_imagens = []
-
-    galeria_imagens.append({
-        "caminho": novo_caminho,
-        "descricao": descricao
-    })
-
-    print(galeria_imagens)
-
-preview = ctk.CTkLabel(janepers,text="[Clique para importar imagem principal]")
-preview.grid(column=0, row=3, rowspan=3)
-preview.bind("<Button-1>", lambda e: imagem())
-
-perso = ctk.CTkLabel(janepers,text="Nome: ")
-perso.grid(column=1,row=0)
-
-personame = ctk.CTkEntry(janepers,placeholder_text="Insira o nome do personagem")
-personame.bind("<Return>", enter_personagem)
-personame.grid(column=2,row=0,sticky="we")
-personame.focus()
-configurar_entry(personame)
-
-personali = ctk.CTkLabel(janepers,text="Personalidade: ")
-personali.grid(column=1,row=1)
-
-personapersona = ctk.CTkTextbox(janepers,height=50)
-personapersona.grid(column=2,row=1, sticky="we")
-configurar_textbox(personapersona)
-
-apa = ctk.CTkLabel(janepers,text="Aparencia: ")
-apa.grid(column=1,row=2)
-
-persoapare = ctk.CTkTextbox(janepers,height=50)
-persoapare.grid(column=2,row=2, sticky="we")
-configurar_textbox(persoapare)
-
-rela = ctk.CTkLabel(janepers,text="Relações")
-rela.grid(column=1, row=3)
-
-relaca = ctk.CTkTextbox(janepers,height=50)
-relaca.grid(column=2,row=3, sticky="we")
-configurar_textbox(relaca)
-
-relabel =ctk.CTkLabel(janepers,text="Separe com ';', Ex: Esposa de X; Amiga de X",font=("Helvetica", 11))
-relabel.grid(column=2,row=4, sticky="w")
-
-hisper = ctk.CTkLabel(janepers,text=f"Historia do personagem")
-hisper.grid(column=1,row=5)
-
-hispertex = ctk.CTkTextbox(janepers,height=50)
-hispertex.grid(column=2,row=5, sticky="we")
-configurar_textbox(hispertex)
-
-podelabel = ctk.CTkLabel(janepers,text="Poderes:")
-podelabel.grid(column=1, row=6)
-
-poderes = ctk.CTkTextbox(janepers,height=50)
-poderes.grid(column=2,row=6, sticky="we")
-configurar_textbox(poderes)
-
-fraquezas = ctk.CTkLabel(janepers,text="Fraquezas:")
-fraquezas.grid(column=1, row=7)
-
-fraquezas = ctk.CTkTextbox(janepers,height=50)
-fraquezas.grid(column=2,row=7, sticky="we")
-configurar_textbox(fraquezas)
-
-habper = ctk.CTkLabel(janepers,text=f"Habilidades do personagem")
-habper.grid(column=1,row=8)
-
-habpertex = ctk.CTkTextbox(janepers,height=50)
-habpertex.grid(column=2,row=8, sticky="we")
-configurar_textbox(habpertex)
-
-fecharperso = ctk.CTkButton(janepers,text="[Fechar]",command=lambda: ocultar_frame(janepers))
-fecharperso.grid(column=1,row=9, sticky="se",pady=10,padx=10)
-
-salvarperso = ctk.CTkButton(janepers,text="[Salvar Personagem]",command=lambda: salvar_personagem())
-salvarperso.grid(column=2,row=9, sticky="se",pady=10,padx=10)
-
-
-#JANELA CRIAR CAPITULO
-
-def enter_capitulo(event):
-    salvar_capitulo()
-
-def salvar_capitulo():
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-    
-    novo = criar_capitulo(
-        historia_selecionada,
-        capiname.get(),
-        capiconteudo.get("1.0", "end-1c")
-    )
-
-    if novo:
-
-        criar_label_capitulo(
-            novo,
-            frame_lista_conteudo,
-            selecionar_capitulo
-        )
-
-        selecionar_capitulo(novo)
-
-        ocultar_frame(janecapi)
-        selecionar_historia(historia_selecionada)
-        print(capiconteudo.get("1.0", "end-1c"))
-
-janecapi = ctk.CTkFrame(janela,width=300,height=220)
-janecapi.grid_propagate(False)
-janecapi.grid_columnconfigure(0, weight=1)
-janecapi.grid_rowconfigure(0,weight=0)
-janecapi.grid_rowconfigure(1,weight=1)
-janecapi.grid_rowconfigure(2,weight=1)
-janecapi.grid_rowconfigure(3,weight=1)
-janecapi.grid_rowconfigure(4,weight=1)
-
-janecapi.place(relx=0.5, rely=0.5, anchor="center")
-janecapi.place_forget()
-
-capi = ctk.CTkLabel(janecapi,text="Insira abaixo o Capitulo")
-capi.grid(column=0,row=0,columnspan=2)
-
-capiname = ctk.CTkEntry(janecapi,placeholder_text="Nome do capítulo")
-capiname.grid(column=0,row=1,sticky="nsew",columnspan=2)
-configurar_entry(capiname)
-
-capiconteudo = ctk.CTkTextbox(janecapi, width=300, height=150, activate_scrollbars=True)
-capiconteudo.focus()
-capiconteudo.bind("<Return>", enter_capitulo)
-capiconteudo.grid(column=0,row=2,sticky="nsew",columnspan=2)
-configurar_textbox(capiconteudo)
-
-fecharsalvar = ctk.CTkButton(janecapi,text="[Fechar]",command=lambda: ocultar_frame(janecapi))
-fecharsalvar.grid(column=0,row=3)
-
-salvarcapit = ctk.CTkButton(janecapi,text="[Criar Capitulo]",command=lambda: salvar_capitulo())
-salvarcapit.grid(column=1,row=3,columnspan=2)
+#JANELAS DE CRIAÇÃO (Personagem, Arco, Capítulo já encapsuladas em suas classes)
 
 #JANELA CRIAR SISTEMA DE PODERES
 
@@ -1142,7 +686,7 @@ def mostrar_todos_sistemas_poder():
     )
     titulo.pack(pady=10, anchor="w", padx=20)
 
-    mostrar_no_conteudo(frame_lista_conteudo,historia_selecionada["sistemas_poder"],sistema_de_poder_selecionado,"nome")
+    mostrar_no_conteudo(frame_lista_conteudo,historia_selecionada["sistemas_poder"],sistema_de_poder_selecionado,"nome",1,1)
 
 def selecionar_sistemapoder(sistemapode):
     global sistema_de_poder_selecionado
@@ -1474,8 +1018,8 @@ janela.bind("<F5>", lambda e: selecionar_historia(historia_selecionada))
 janela.bind("<Control-n>", lambda event: sh())
 
 def sc():
-    if historia_selecionada and capitulo_selecionado is None:
-        mostrar_frame(janecapi)
+    if historia_selecionada and gerenciador_capitulo.capitulo_selecionado is None:
+        gerenciador_capitulo.abrir_criacao()
 
 janela.bind("<Control-Key-c>", lambda event: sc())
 

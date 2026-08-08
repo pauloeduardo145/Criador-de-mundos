@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import historias
-from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao
+from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao, novo_arco
 from PIL import Image
 
 def mostrar_frame(frame):
@@ -88,7 +88,7 @@ def criar_label_capitulo(capitulo,frame,callback=None):
 
     return botao
 
-def criar_capitulo(historia,nome,conteudo):
+def criar_capitulo(historia,nome,arco_id,conteudo):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -98,7 +98,7 @@ def criar_capitulo(historia,nome,conteudo):
         print("Selecione uma história primeiro")
         return
 
-    capitulo = novo_capitulo(nome,conteudo)
+    capitulo = novo_capitulo(nome,arco_id,conteudo)
 
     historia["capitulos"].append(capitulo)
 
@@ -179,3 +179,32 @@ def mostrar_imagem(caminho,tamanho):
     img_ctk = ctk.CTkImage(light_image=imagem_pil,dark_image=imagem_pil,size=(imagem_pil.width, imagem_pil.height))
 
     return img_ctk
+
+def criar_arco(historia, nome):
+
+    if historia is None:
+        print("Nenhuma história selecionada")
+        return
+
+    arco = novo_arco(nome, historia)
+
+    historia["arcos"].append(arco)
+
+    historias.atualizar()
+
+    return arco
+
+def criar_titulo_arco(arco, frame, historia):
+
+    capitulos = [
+        c for c in historia.get("capitulos", [])
+        if c.get("arco_id") == arco["id"]
+    ]
+
+    titulo = ctk.CTkLabel(
+        frame,
+        text=f"📁 {arco['nome']} ({len(capitulos)})",
+        font=("Helvetica", 18, "bold")
+    )
+
+    titulo.pack(anchor="w", padx=20, pady=(20, 10))
