@@ -26,8 +26,6 @@ historico = []
 data_atual = datetime.now().strftime("%Y%m%d_%H%M%S")
 
 historia_selecionada = None
-sistema_de_poder_selecionado = None
-observacao_selecionada = None
 
 def histOria(frame):
     if historia_selecionada is None:
@@ -111,10 +109,10 @@ Addarco.grid(column=1,row=3,sticky="w",padx=10,pady=10)
 capitadic = ctk.CTkButton(frame_botoes,height=25,text="[Criar Capitulo]",command=lambda: gerenciador_capitulo.abrir_criacao())
 capitadic.grid(column=2,row=3,sticky="w",padx=10,pady=10)
 
-Addposis = ctk.CTkButton(frame_botoes,text="[Criar Sistema de Poder]",command=lambda: histOria(janesispoder))
+Addposis = ctk.CTkButton(frame_botoes,text="[Criar Sistema de Poder]",command=lambda: gerenciador_sistema_poder.abrir_criacao())
 Addposis.grid(column=3,row=3,)
 
-Addobs = ctk.CTkButton(frame_botoes,text="[Adicionar observação]", command=lambda: (atualizar_optionmenu_personagens(),histOria(janeobser)))
+Addobs = ctk.CTkButton(frame_botoes,text="[Adicionar observação]", command=lambda: gerenciador_observacao.abrir_criacao())
 Addobs.grid(column=4,row=3, sticky="w",padx=10,pady=10)
 
 #HISTORIAS
@@ -270,6 +268,8 @@ def mostrar_no_conteudo(frame, itens, callback, chave_nome,li,col):
 from arco import Arco
 from capitulo import Capitulo
 from personagem import Personagem
+from sistema_de_poder import SistemaDePoder
+from observacao import Observacao
 
 gerenciador_arco = Arco(
     janela,
@@ -295,6 +295,42 @@ gerenciador_personagem = Personagem(
     obter_historia_selecionada=lambda: historia_selecionada,
     apos_criar=lambda h: selecionar_historia(h)
 )
+
+gerenciador_sistema_poder = SistemaDePoder(
+    janela,
+    frame_lista_conteudo,
+    mostrar_no_conteudo,
+    obter_historia_selecionada=lambda: historia_selecionada,
+    apos_criar=lambda h: selecionar_historia(h)
+)
+
+gerenciador_observacao = Observacao(
+    janela,
+    frame_lista_conteudo,
+    obter_historia_selecionada=lambda: historia_selecionada,
+    apos_criar=lambda h: selecionar_historia(h),
+    # "navegar" só é definido mais abaixo no arquivo; a lambda resolve o
+    # nome no momento da chamada (late binding), então funciona normalmente.
+    navegar=lambda funcao, *args: navegar(funcao, *args)
+)
+
+def selecionar_sistemapoder(sistemapode):
+    gerenciador_sistema_poder.selecionar(sistemapode)
+
+def edicao_sistempoder(*args):
+    gerenciador_sistema_poder.editar()
+
+def mostrar_todos_sistemas_poder(event=None):
+    gerenciador_sistema_poder.mostrar_todos(event)
+
+def selecionar_observacoes(observacao):
+    gerenciador_observacao.selecionar(observacao)
+
+def edicao_observacao(*args):
+    gerenciador_observacao.editar()
+
+def mostrar_todas_observacoes(event=None):
+    gerenciador_observacao.mostrar_todos(event)
 
 def selecionar_personagem(personagem):
     gerenciador_personagem.selecionar_personagem(personagem)
@@ -382,127 +418,6 @@ def selecionar_historia(historia):
     mostrar_no_conteudo(frame_lista_conteudo,historia["observacoes"],selecionar_observacoes,"titulo",6,6)
 
 #SELECIONAR ...
-
-def selecionar_observacoes(observacao):
-    global observacao_selecionada
-
-    observacao_selecionada = observacao
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um label para o sistema de poder
-    for chave, valor in observacao.items():
-
-        ctk.CTkLabel(frame_lista_conteudo,text=f"{chave}:").pack(anchor="w",padx=10)
-        
-        ctk.CTkLabel(frame_lista_conteudo,text=str(valor),wraplength=900,justify="left").pack(anchor="w",padx=10)
-
-    edit = ctk.CTkButton(frame_lista_conteudo,text="Editar", command=lambda *args: edicao_observacao())
-    edit.pack(pady=10)
-
-#EDIÇÃO
-
-def edicao_observacao(*args):
-    global observacao_selecionada
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    if observacao_selecionada is None:
-        print("Nenhuma observação selecionada")
-        return
-
-    # Limpa o frame
-    limpar_frame_conteudo()
-
-    # Título
-    titulo = ctk.CTkLabel(
-        frame_lista_conteudo,
-        text="Modo Edição (Observação)",
-        font=("Helvetica", 18, "bold")
-    )
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    # Relação
-    ctk.CTkLabel(frame_lista_conteudo, text="Relação:").pack(padx=10, pady=5)
-
-    relacao = ctk.CTkEntry(frame_lista_conteudo)
-    relacao.insert(0, observacao_selecionada.get("relacao", ""))
-    relacao.pack(fill="x", padx=10, pady=5)
-    configurar_entry(relacao)
-
-    # Título
-    ctk.CTkLabel(frame_lista_conteudo, text="Título:").pack(padx=10, pady=5)
-
-    titulo_obs = ctk.CTkEntry(frame_lista_conteudo)
-    titulo_obs.insert(0, observacao_selecionada.get("titulo", ""))
-    titulo_obs.pack(fill="x", padx=10, pady=5)
-    configurar_entry(titulo_obs)
-
-    # Conteúdo
-    ctk.CTkLabel(frame_lista_conteudo, text="Conteúdo:").pack(padx=10, pady=5)
-
-    conteudo = ctk.CTkTextbox(frame_lista_conteudo, height=150)
-    conteudo.insert("1.0", observacao_selecionada.get("conteudo", ""))
-    conteudo.pack(fill="both", expand=True, padx=10, pady=5)
-    configurar_textbox(conteudo)
-
-    def salvar_edicao():
-
-        observacao_selecionada["relacao"] = relacao.get()
-        observacao_selecionada["titulo"] = titulo_obs.get()
-        observacao_selecionada["conteudo"] = conteudo.get("1.0", "end-1c")
-
-        historias.salvar_dados(historias.Historias)
-
-        selecionar_observacoes(observacao_selecionada)
-
-    def fechar_sem_salvar():
-        confirmar = messagebox.askyesno(
-            "Cancelar edição",
-            "Deseja sair sem salvar as alterações?"
-        )
-
-        if confirmar:
-            selecionar_observacoes(observacao_selecionada)
-
-    # Botões
-    ctk.CTkButton(
-        frame_lista_conteudo,
-        text="Salvar",
-        command=salvar_edicao
-    ).pack(pady=10)
-
-    ctk.CTkButton(
-        frame_lista_conteudo,
-        text="Fechar sem salvar",
-        command=fechar_sem_salvar
-    ).pack(pady=10)
-
-#EXCLUIR
-
-def excluir_observacao(titulo):
-
-    observacao = next(
-        (o for o in historia_selecionada["observacoes"] if o["titulo"] == titulo),
-        None
-    )
-
-    if observacao is None:
-        return
-
-    if not messagebox.askyesno(
-        "Excluir",
-        f'Deseja realmente excluir a observação "{titulo}"?'
-    ):
-        return
-
-    historia_selecionada["observacoes"].remove(observacao)
-
-    historias.salvar_dados(historias.Historias)
-    selecionar_historia(historia_selecionada)
 
 def excluir_historia(nome):
 
@@ -593,7 +508,7 @@ def excluir_item(*args):
             gerenciador_capitulo.excluir(item)
 
         elif tipo == "Observação":
-            excluir_observacao(item)
+            gerenciador_observacao.excluir(item)
 
         elif tipo == "História":
             excluir_historia(item)
@@ -662,314 +577,6 @@ criar_h.grid(column=1,row=3,padx=5,pady=10,sticky="s")
 
 f = ctk.CTkButton(frame_nomeh,text="Fechar",command=lambda: ocultar_frame(frame_nomeh))
 f.grid(column=0,row=3,padx=5)
-
-#JANELAS DE CRIAÇÃO (Personagem, Arco, Capítulo já encapsuladas em suas classes)
-
-#JANELA CRIAR SISTEMA DE PODERES
-
-def mostrar_todos_sistemas_poder():
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    sistemapoder = historia_selecionada["sistemas_poder"]
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um título para a seção
-    titulo = ctk.CTkLabel(
-        frame_lista_conteudo,
-        text=f"📂 Todos os sistemas de poder ({len(sistemapoder)})",
-        font=("Helvetica", 18, "bold")
-    )
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    mostrar_no_conteudo(frame_lista_conteudo,historia_selecionada["sistemas_poder"],sistema_de_poder_selecionado,"nome",1,1)
-
-def selecionar_sistemapoder(sistemapode):
-    global sistema_de_poder_selecionado
-
-    sistema_de_poder_selecionado = sistemapode
-
-    # 1. Limpa o frame central para remover o que estava antes
-    limpar_frame_conteudo()
-
-    # 2. Cria um label para o sistema de poder
-    for chave, valor in sistemapode.items():
-
-        if chave in [ "id", "historia_id"]:
-
-            continue
-
-        ctk.CTkLabel(frame_lista_conteudo,text=f"{chave}:").pack(anchor="w",padx=10)
-        
-        ctk.CTkLabel(frame_lista_conteudo,text=str(valor),wraplength=900,justify="left").pack(anchor="w",padx=10)
-
-    print(sistemapode["nome"])
-
-    edit = ctk.CTkButton(frame_lista_conteudo,text="Editar", command=lambda *args: edicao_sistempoder())
-    edit.pack(pady=10)
-
-def salvar_sistema_de_poder():
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    novo = criar_sistemadepoder(
-        historia_selecionada,
-        powename.get(),
-        powerconteudo.get("1.0", "end-1c"),
-        regras.get("1.0", "end-1c"),
-        vantagens.get("1.0", "end-1c"),fraquezas.get("1.0", "end-1c"))
-
-    if novo:
-
-        criar_label_sistema_poder(
-            novo,
-            frame_lista_conteudo,
-            selecionar_sistemapoder)
-
-        selecionar_sistemapoder(novo)
-
-        ocultar_frame(janesispoder)
-
-        print(novo)
-
-def edicao_sistempoder(*args):
-    global sistema_de_poder_selecionado
-
-    if sistema_de_poder_selecionado is None:
-        print("Nenhum sistema de poder selecionado")
-        return
-
-    limpar_frame_conteudo()
-
-    titulo = ctk.CTkLabel(frame_lista_conteudo,text="Modo Edição",font=("Helvetica", 18, "bold"))
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    # Nome
-
-    ctk.CTkLabel(frame_lista_conteudo,text="Nome:").pack(anchor="w", padx=10)
-    nome = ctk.CTkEntry(frame_lista_conteudo)
-    nome.insert(0,sistema_de_poder_selecionado["nome"])
-    nome.pack(fill="x", padx=10, pady=5)
-    configurar_entry(nome)
-
-    # Descrição
-
-    ctk.CTkLabel(frame_lista_conteudo,text="Descrição:").pack(anchor="w", padx=10)
-
-    descricao = ctk.CTkTextbox(frame_lista_conteudo,height=100)
-    descricao.insert("1.0",sistema_de_poder_selecionado["descricao"])
-    descricao.pack(fill="x", padx=10, pady=5)
-    configurar_textbox(descricao)
-
-    # Regras
-
-    ctk.CTkLabel(frame_lista_conteudo,text="Regras:").pack(anchor="w", padx=10)
-
-    regras = ctk.CTkTextbox(frame_lista_conteudo,height=100)
-    regras.insert("1.0",sistema_de_poder_selecionado["regras"])
-    regras.pack(fill="x", padx=10, pady=5)
-    configurar_textbox(regras)
-
-    # Vantagens
-
-    ctk.CTkLabel(frame_lista_conteudo,text="Vantagens:").pack(anchor="w", padx=10)
-    
-    vantagens = ctk.CTkTextbox(frame_lista_conteudo,height=100)
-    vantagens.insert("1.0",sistema_de_poder_selecionado["vantagens"])
-    vantagens.pack(fill="x", padx=10, pady=5)
-    configurar_textbox(vantagens)
-
-    # Fraquezas
-
-    ctk.CTkLabel(frame_lista_conteudo,text="Fraquezas:").pack(anchor="w", padx=10)
-
-    fraquezas = ctk.CTkTextbox(frame_lista_conteudo,height=100)
-    fraquezas.insert("1.0",sistema_de_poder_selecionado["fraquezas"])
-    fraquezas.pack(fill="x", padx=10, pady=5)
-    configurar_textbox(fraquezas)
-
-    def salvar_edicao():
-
-        sistema_de_poder_selecionado["nome"] = nome.get()
-        sistema_de_poder_selecionado["descricao"] = descricao.get("1.0","end-1c")
-        sistema_de_poder_selecionado["regras"] = regras.get("1.0","end-1c")
-        sistema_de_poder_selecionado["vantagens"] = vantagens.get("1.0","end-1c")
-        sistema_de_poder_selecionado["fraquezas"] = fraquezas.get("1.0","end-1c")
-
-        historias.salvar_dados(historias.Historias)
-
-        selecionar_sistemapoder(sistema_de_poder_selecionado)
-
-    botao_salvar = ctk.CTkButton(frame_lista_conteudo,text="Salvar",command=lambda: salvar_edicao())
-    botao_salvar.pack(pady=10)
-
-    arearolavel()
-
-janesispoder = ctk.CTkFrame(janela,width=600,height=500)
-janesispoder.grid_propagate(False)
-janesispoder.grid_columnconfigure(0,weight=0)
-janesispoder.grid_columnconfigure(1,weight=1)
-janesispoder.grid_rowconfigure(0,weight=1)
-janesispoder.grid_rowconfigure(1,weight=1)
-janesispoder.grid_rowconfigure(2,weight=1)
-janesispoder.grid_rowconfigure(3,weight=1)
-janesispoder.grid_rowconfigure(4,weight=1)
-janesispoder.grid_rowconfigure(5,weight=1)
-
-powerlabel = ctk.CTkLabel(janesispoder,text="Adicionar sistema de poderes")
-powerlabel.grid(column=0,row=0,columnspan=2)
-
-powerlabename = ctk.CTkLabel(janesispoder,text="Nome: ")
-powerlabename.grid(column=0,row=1)
-
-powename = ctk.CTkEntry(janesispoder,placeholder_text="Nome do sistema de poder")
-powename.grid(column=1,row=1,columnspan=2,sticky="ew")
-configurar_entry(powename)
-
-powerlabelconteudo = ctk.CTkLabel(janesispoder,text="Conteudo:")
-powerlabelconteudo.grid(column=0,row=2)
-
-powerconteudo = ctk.CTkTextbox(janesispoder,height=50, activate_scrollbars=True)
-powerconteudo.grid(column=1,row=2,sticky="ew",columnspan=2)
-configurar_textbox(powerconteudo)
-
-powerlabelregras = ctk.CTkLabel(janesispoder,text="Regras:")
-powerlabelregras.grid(column=0,row=3)
-
-regras = ctk.CTkTextbox(janesispoder,width=300,height=50,activate_scrollbars=True)
-regras.grid(column=1,row=3,sticky="ew",columnspan=2)
-configurar_textbox(regras)
-
-powerlabelvantagens = ctk.CTkLabel(janesispoder,text="Vantagens:")
-powerlabelvantagens.grid(column=0,row=4)
-
-vantagens = ctk.CTkTextbox(janesispoder,height=50,activate_scrollbars=True)
-vantagens.grid(column=1,row=4,sticky="ew",columnspan=2)
-configurar_textbox(vantagens)
-
-powerlabelfraquezas = ctk.CTkLabel(janesispoder,text="Fraquezas:")
-powerlabelfraquezas.grid(column=0,row=5)
-
-fraquezas = ctk.CTkTextbox(janesispoder,height=50,activate_scrollbars=True)
-fraquezas.grid(column=1,row=5,sticky="ew",columnspan=2)
-configurar_textbox(fraquezas)
-
-powerfechar = ctk.CTkButton(janesispoder,text="[Fechar]", command=lambda: ocultar_frame(janesispoder))
-powerfechar.grid(column=0,row=6)
-
-powersalvar = ctk.CTkButton(janesispoder,text="[Criar Sistema de poder]",command=lambda: salvar_sistema_de_poder())
-powersalvar.grid(column=1,row=6)
-
-#CRIAR JANELA OBSERVAÇÕES
-
-def salvar_observacoes():
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    novo = criar_observacoes(
-        historia_selecionada,
-        var_relacao.get(),
-        obstitulo.get(),
-        obsconteudo.get("1.0", "end").strip()
-    )
-
-    if novo:
-
-        criar_label_obs(
-            novo,
-            frame_lista_conteudo,
-            selecionar_observacoes
-        )
-
-        selecionar_observacoes(novo)
-        ocultar_frame(janeobser)
-
-        print(novo)
-
-def mostrar_todas_observacoes():
-
-    if historia_selecionada is None:
-        print("Nenhuma história selecionada")
-        return
-
-    observacoes = historia_selecionada.get("observacoes", [])
-
-    limpar_frame_conteudo()
-
-    titulo = ctk.CTkLabel(
-        frame_lista_conteudo,
-        text=f"📂 Todas as observações/curiosidades ({len(observacoes)})",
-        font=("Helvetica", 18, "bold")
-    )
-    titulo.pack(pady=10, anchor="w", padx=20)
-
-    grid_obs = ctk.CTkFrame(frame_lista_conteudo, fg_color="transparent")
-    grid_obs.pack(fill="both", expand=True, padx=20)
-
-    for indice, observacao in enumerate(observacoes):
-
-        linha = indice // 6
-        coluna = indice % 6
-
-        botao_card = ctk.CTkButton(
-            grid_obs,
-            text=observacao["titulo"],
-            command=lambda o=observacao: navegar(selecionar_observacoes, o)
-        )
-
-        botao_card.grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
-
-janeobser = ctk.CTkFrame(janela, width=600, height=500)
-janeobser.grid_propagate(False)
-
-janeobser.grid_columnconfigure(0, weight=0)
-janeobser.grid_columnconfigure(1, weight=1)
-
-for i in range(4):
-    janeobser.grid_rowconfigure(i, weight=1)
-
-var_relacao = ctk.StringVar(value="")
-
-obsrelacao = ctk.CTkOptionMenu(janeobser,values=[""],variable=var_relacao,width=250)
-obsrelacao.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
-
-def atualizar_optionmenu_personagens():
-    if historia_selecionada is None:
-        obsrelacao.configure(values=[""])
-        var_relacao.set("")
-        return
-
-    nomes = [p["nome"] for p in historia_selecionada["personagens"]]
-
-    if not nomes:
-        nomes = [""]
-
-    obsrelacao.configure(values=nomes)
-    var_relacao.set(nomes[0])
-
-ctk.CTkLabel(janeobser, text="Título:").grid(row=1, column=0, padx=10, pady=10, sticky="w")
-
-obstitulo = ctk.CTkEntry(janeobser)
-obstitulo.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
-configurar_entry(obstitulo)
-
-obsconteudo = ctk.CTkTextbox(janeobser, height=180)
-obsconteudo.grid(row=2, column=1, padx=10, pady=10, sticky="nsew")
-configurar_textbox(obsconteudo)
-
-salvaobs = ctk.CTkButton(janeobser,text="[Salva]",command=lambda: salvar_observacoes())
-salvaobs.grid(row=3,column=1)
-
-f = ctk.CTkButton(janeobser,text="Fechar",command=lambda: ocultar_frame(janeobser))
-f.grid(row=3,column=0)
 
 #MOSTRAR NO CONTEUDO
 
