@@ -17,7 +17,13 @@ class Perfil:
             self.fa.grid()
             return
 
-        self.fa = ctk.CTkFrame(self.frame, width=320, height=400)
+        self.toplevel = ctk.CTkToplevel(self.frame)
+        self.toplevel.geometry("350x400")
+        self.toplevel.title("Perfil")
+        self.toplevel.resizable(False, False)
+
+        self.fa = ctk.CTkFrame(self.toplevel, width=350, height=400)
+        self.fa.pack(fill="both", expand=True)
         self.fa.grid_propagate(False)
         self.fa.grid(column=2, row=1)
 
@@ -30,9 +36,6 @@ class Perfil:
         self.mostrar_perfil()
 
     def mostrar_perfil(self):
-        
-        ##TOPO
-
         #icone
 
         icone = ctk.CTkLabel(self.fa,text="◯",font=("Arial",40))
@@ -58,6 +61,7 @@ class Perfil:
             ("📚 Histórias", stats["historias"]),
             ("👥 Personagens", stats["personagens"]),
             ("✨ Sistemas de Poder", stats["sistemas"]),
+            ("🔗 Arcos", stats["arcos"]),
             ("📖 Capítulos", stats["capitulos"]),
             ("📝 Observações", stats["observacoes"]),
         ]
@@ -84,7 +88,7 @@ class Perfil:
         versao.grid(row=12,column=1)
 
     def fechar_perfil(self):
-        self.fa.grid_remove()
+        self.toplevel.withdraw()
 
     def mostrar_edicao(self):
 

@@ -5,7 +5,7 @@ from tkinter import messagebox
 import historias
 
 class Capitulo:
-    def __init__(self, janela, frame_conteudo, mostrar_no_conteudo, gerenciador_arco,
+    def __init__(self, janela, frame_conteudo,mostrar_no_conteudo, gerenciador_arco,
                  obter_historia_selecionada=None, apos_criar=None):
 
         self.janela = janela
@@ -18,6 +18,7 @@ class Capitulo:
         self.apos_criar = apos_criar
 
         self._criar_janela_criacao()
+        self._criar_janela_edicao()
 
     def limpar_frame_conteudo(self):
         for widget in self.frame_conteudo.winfo_children():
@@ -49,16 +50,36 @@ class Capitulo:
         # 1. Limpa o frame central para remover o que estava antes
         self.limpar_frame_conteudo()
 
-        # 2. Cria um label para cada campo do capítulo
+        # 2. Cabeçalho: título à esquerda e botão Editar à direita
+        cabecalho = ctk.CTkFrame(self.frame_conteudo, fg_color="transparent")
+        cabecalho.pack(fill="x", padx=20, pady=(20, 5))
+
+        ctk.CTkLabel(
+            cabecalho,
+            text=f"📖 {capitulo['nome']}",
+            font=("Helvetica", 22, "bold")
+        ).pack(side="left")
+
+        ctk.CTkButton(
+            cabecalho,
+            text="✏️ Editar",
+            width=90,
+            command=lambda: self.edicao_capitulo()
+        ).pack(side="right")
+
+        # 3. Cria um label para cada campo do capítulo (o nome já está no título)
         for chave, valor in capitulo.items():
+
+            if chave == "nome":
+                continue
+
             ctk.CTkLabel(self.frame_conteudo,text=f"{chave}:").pack(anchor="w",padx=10)
 
             ctk.CTkLabel(self.frame_conteudo,text=str(valor),wraplength=900,justify="left").pack(anchor="w",padx=10)
 
-        edit = ctk.CTkButton(self.frame_conteudo,text="Editar", command=lambda *args: self.edicao_capitulo())
-        edit.pack(pady=10)
-
         self.arearolavel()
+
+    # ---------- Edição ----------
 
     def edicao_capitulo(self, *args):
 
@@ -68,219 +89,140 @@ class Capitulo:
             print("Nenhuma história ou capítulo selecionado")
             return
 
-        capitulo_selecionado = self.capitulo_selecionado
+        capitulo = self.capitulo_selecionado
 
-        self.limpar_frame_conteudo()
+        self.capitulo_em_edicao = capitulo
 
-        titulo = ctk.CTkLabel(
-            self.frame_conteudo,
-            text="Modo Edição",
-            font=("Helvetica", 18, "bold")
-        )
-        titulo.pack(pady=10, anchor="w", padx=20)
+        self.capiname_edicao.delete(0, "end")
+        self.capiname_edicao.insert(0, capitulo["nome"])
 
-        # =========================
-        # NOME
-        # =========================
-
-        ctk.CTkLabel(
-            self.frame_conteudo,
-            text="Nome:"
-        ).pack(anchor="w", padx=10)
-
-        nome = ctk.CTkEntry(self.frame_conteudo)
-        nome.insert(0, capitulo_selecionado["nome"])
-        nome.pack(fill="x", padx=10, pady=5)
-        configurar_entry(nome)
-
-        # =========================
-        # ARCO
-        # =========================
-
-        ctk.CTkLabel(
-            self.frame_conteudo,
-            text="Arco:"
-        ).pack(anchor="w", padx=10, pady=(10, 0))
-
-        # Pega todos os arcos da história
+        # Arcos disponíveis e arco atual do capítulo
         arcos = historia.get("arcos", [])
 
-        nomes_arcos = ["Sem arco"]
+        nomes_arcos = ["Sem arco"] + [arco["nome"] for arco in arcos]
 
-        nomes_arcos.extend(
-            arco["nome"]
-            for arco in arcos
+        arco_atual = next(
+            (arco["nome"] for arco in arcos if arco["id"] == capitulo.get("arco_id")),
+            "Sem arco"
         )
 
-        # Descobre o nome do arco atualmente associado
-        arco_atual = "Sem arco"
+        self.arco_option_edicao.configure(values=nomes_arcos)
+        self.arco_var_edicao.set(arco_atual)
 
-        arco_id_atual = capitulo_selecionado.get("arco_id")
+        self.capiconteudo_edicao.delete("1.0", "end")
+        self.capiconteudo_edicao.insert("1.0", capitulo.get("conteudo", ""))
 
-        if arco_id_atual is not None:
+        self._atualizar_contador_edicao()
 
-            for arco in arcos:
+        self.toplevel_edicao.deiconify()
+        self.toplevel_edicao.lift()
+        self.toplevel_edicao.focus_force()
+        self.capiname_edicao.focus()
 
-                if arco["id"] == arco_id_atual:
-                    arco_atual = arco["nome"]
-                    break
+    def _atualizar_contador_edicao(self, event=None):
+        texto = self.capiconteudo_edicao.get("1.0", "end-1c")
 
-        # Variável exclusiva desta edição
-        arco_var_edicao = ctk.StringVar(
-            value=arco_atual
+        self.contador_edicao.configure(text=f"{len(texto)} caracteres")
+
+    def _salvar_edicao(self):
+
+        historia = self._historia_selecionada()
+        capitulo = self.capitulo_em_edicao
+
+        if historia is None or capitulo is None:
+            return
+
+        nome = self.capiname_edicao.get().strip()
+
+        if not nome:
+            messagebox.showwarning(
+                "Editar capítulo", "Digite um nome para o capítulo.",
+                parent=self.toplevel_edicao
+            )
+            return
+
+        if nome != capitulo["nome"] and any(
+            c["nome"] == nome for c in historia["capitulos"]
+        ):
+            messagebox.showwarning(
+                "Editar capítulo", "Já existe um capítulo com esse nome.",
+                parent=self.toplevel_edicao
+            )
+            return
+
+        capitulo["nome"] = nome
+        capitulo["arco_id"] = self.gerenciador_arco.obter_id_arco(
+            self.arco_var_edicao.get()
+        )
+        capitulo["conteudo"] = self.capiconteudo_edicao.get("1.0", "end-1c")
+
+        historias.atualizar()
+
+        self.toplevel_edicao.withdraw()
+
+        self.selecionar_capitulo(capitulo)
+
+    def _criar_janela_edicao(self):
+        self.capitulo_em_edicao = None
+
+        # Variável exclusiva da edição (a do criar capítulo é compartilhada)
+        self.arco_var_edicao = ctk.StringVar(value="Sem arco")
+
+        self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        self.toplevel_edicao.geometry("800x600")
+        self.toplevel_edicao.title("Editar capítulo")
+        self.toplevel_edicao.resizable(False, False)
+        self.toplevel_edicao.protocol("WM_DELETE_WINDOW", self.toplevel_edicao.withdraw)
+
+        self.toplevel_edicao.withdraw()
+
+        frame = ctk.CTkFrame(self.toplevel_edicao)
+        frame.pack(fill="both", expand=True)
+
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=1)
+        frame.grid_rowconfigure(3, weight=1)
+
+        ctk.CTkLabel(frame, text="Editar Capítulo").grid(
+            column=0, row=0, columnspan=2, pady=10
         )
 
-        arco_option = ctk.CTkOptionMenu(
-            self.frame_conteudo,
-            variable=arco_var_edicao,
-            values=nomes_arcos,
+        self.capiname_edicao = ctk.CTkEntry(frame, placeholder_text="Nome do capítulo")
+        self.capiname_edicao.grid(column=0, row=1, columnspan=2, sticky="ew", padx=10)
+        self.capiname_edicao.bind("<Return>", lambda e: self._salvar_edicao())
+        configurar_entry(self.capiname_edicao)
+
+        self.arco_option_edicao = ctk.CTkOptionMenu(
+            frame,
+            variable=self.arco_var_edicao,
+            values=["Sem arco"],
             width=250
         )
-
-        arco_option.pack(
-            fill="x",
-            padx=10,
-            pady=5
+        self.arco_option_edicao.grid(
+            column=0, row=2, columnspan=2, padx=10, pady=5, sticky="ew"
         )
 
-        # =========================
-        # CONTEÚDO
-        # =========================
-
-        ALTURA_MIN = 80
-        ALTURA_MAX = 375
-
-        conteudos = ctk.CTkTextbox(
-            self.frame_conteudo,
-            wrap="word",
-            activate_scrollbars=True
+        self.capiconteudo_edicao = ctk.CTkTextbox(
+            frame, wrap="word", activate_scrollbars=True
         )
-
-        conteudos.pack(
-            fill="x",
-            padx=10,
-            pady=5
+        self.capiconteudo_edicao.grid(
+            column=0, row=3, columnspan=2, sticky="nsew", padx=10, pady=5
         )
+        configurar_textbox(self.capiconteudo_edicao)
+        self.capiconteudo_edicao.bind("<KeyRelease>", self._atualizar_contador_edicao)
 
-        configurar_textbox(conteudos)
+        self.contador_edicao = ctk.CTkLabel(frame, text="0 caracteres")
+        self.contador_edicao.grid(column=0, row=4, columnspan=2)
 
-        conteudos.insert(
-            "1.0",
-            capitulo_selecionado.get("conteudo", "")
-        )
+        ctk.CTkButton(
+            frame, text="Fechar",
+            command=lambda: self.toplevel_edicao.withdraw()
+        ).grid(column=0, row=5, padx=5, pady=10)
 
-        def ajustar_altura(event=None):
-
-            widget = conteudos
-            widget.update_idletasks()
-
-            resultado = widget._textbox.count(
-                "1.0",
-                "end",
-                "displaylines"
-            )
-
-            linhas = int(resultado[0]) if resultado else 1
-
-            altura_por_linha = 21
-            altura_desejada = linhas * altura_por_linha + 20
-
-            nova_altura = max(
-                ALTURA_MIN,
-                min(altura_desejada, ALTURA_MAX)
-            )
-
-            widget.configure(height=nova_altura)
-
-            widget.edit_modified(False)
-
-        ajustar_altura()
-
-        conteudos.bind(
-            "<<Modified>>",
-            ajustar_altura
-        )
-
-        # =========================
-        # SALVAR
-        # =========================
-
-        def obter_id_arco_edicao():
-
-            nome_arco = arco_var_edicao.get()
-
-            if nome_arco == "Sem arco":
-                return None
-
-            for arco in historia.get("arcos", []):
-
-                if arco["nome"] == nome_arco:
-                    return arco["id"]
-
-            return None
-
-        def salvar_edicao():
-
-            arco_id = obter_id_arco_edicao()
-
-            capitulo_selecionado["nome"] = nome.get()
-
-            capitulo_selecionado["arco_id"] = arco_id
-
-            capitulo_selecionado["conteudo"] = conteudos.get(
-                "1.0",
-                "end-1c"
-            )
-
-            print("Capítulo salvo:")
-            print("Nome:", capitulo_selecionado["nome"])
-            print("Arco:", arco_var_edicao.get())
-            print("ID do arco:", arco_id)
-
-            historias.atualizar()
-
-            self.selecionar_capitulo(
-                capitulo_selecionado
-            )
-
-        botao_salvar = ctk.CTkButton(
-            self.frame_conteudo,
-            text="Salvar",
-            command=salvar_edicao
-        )
-
-        botao_salvar.pack(pady=10)
-
-        # =========================
-        # CONTADOR
-        # =========================
-
-        contador = ctk.CTkLabel(
-            self.frame_conteudo,
-            text="0 caracteres"
-        )
-
-        contador.pack(padx=100)
-
-        def atualizar(event=None):
-
-            texto = conteudos.get(
-                "1.0",
-                "end-1c"
-            )
-
-            contador.configure(
-                text=f"{len(texto)} caracteres"
-            )
-
-        atualizar()
-
-        conteudos.bind(
-            "<KeyRelease>",
-            atualizar
-        )
-
-        self.arearolavel()
+        ctk.CTkButton(
+            frame, text="Salvar",
+            command=lambda: self._salvar_edicao()
+        ).grid(column=1, row=5, padx=5, pady=10)
 
     # ---------- Listagem (usada pela navegação principal) ----------
 
@@ -403,11 +345,12 @@ class Capitulo:
         if self._historia_selecionada() is None:
             print("Nenhuma história selecionada")
             return
-
+        
         self.gerenciador_arco.atualizar_optionmenu(self.arco_option)
 
-        mostrar_frame(self.janela_criacao)
-        self.janela_criacao.focus()
+        self.toplevel.deiconify()
+        self.toplevel.lift()
+        self.toplevel.focus_force()
 
     def _salvar_criacao(self):
         historia = self._historia_selecionada()
@@ -437,22 +380,29 @@ class Capitulo:
 
             self.selecionar_capitulo(novo)
 
-            ocultar_frame(self.janela_criacao)
-
             if self.apos_criar:
                 self.apos_criar(historia)
+        
+        self.toplevel.withdraw()
 
     def _criar_janela_criacao(self):
-        self.janela_criacao = ctk.CTkFrame(self.janela, width=300, height=220)
+        self.toplevel = ctk.CTkToplevel(self.janela)
+        self.toplevel.geometry("1000x600")
+        self.toplevel.title("Criar capitulo")
+        self.toplevel.resizable(False, False)
+        self.toplevel.protocol("WM_DELETE_WINDOW",self.toplevel.withdraw)
+
+        self.toplevel.withdraw()
+
+        self.janela_criacao = ctk.CTkFrame(self.toplevel, width=1000, height=590)
+        self.janela_criacao.pack(fill="both", expand=False)
         self.janela_criacao.grid_propagate(False)
         self.janela_criacao.grid_columnconfigure(0, weight=1)
         self.janela_criacao.grid_rowconfigure(0, weight=0)
-
-        for i in range(5):
-            self.janela_criacao.grid_rowconfigure(i, weight=1)
-
-        self.janela_criacao.place(relx=0.5, rely=0.5, anchor="center")
-        self.janela_criacao.place_forget()
+        self.janela_criacao.grid_rowconfigure(1, weight=1)
+        self.janela_criacao.grid_rowconfigure(2, weight=0)
+        self.janela_criacao.grid_rowconfigure(3, weight=3)
+        self.janela_criacao.grid_rowconfigure(4, weight=1)
 
         def enter_capitulo(event):
             self._salvar_criacao()
@@ -460,7 +410,7 @@ class Capitulo:
         ctk.CTkLabel(self.janela_criacao, text="Insira abaixo o Capitulo").grid(column=0, row=0, columnspan=2)
 
         self.capiname_criacao = ctk.CTkEntry(self.janela_criacao, placeholder_text="Nome do capítulo")
-        self.capiname_criacao.grid(column=0, row=1, sticky="nsew", columnspan=2)
+        self.capiname_criacao.grid(column=0, row=1, sticky="ew", columnspan=2)
         configurar_entry(self.capiname_criacao)
 
         self.arco_option = ctk.CTkOptionMenu(
@@ -477,15 +427,15 @@ class Capitulo:
             self.janela_criacao, width=300, height=150, activate_scrollbars=True
         )
         self.capiconteudo_criacao.bind("<Return>", enter_capitulo)
-        self.capiconteudo_criacao.grid(column=0, row=3, sticky="nsew", columnspan=2)
+        self.capiconteudo_criacao.grid(column=0, row=3, sticky="nwse", columnspan=2)
         configurar_textbox(self.capiconteudo_criacao)
 
         ctk.CTkButton(
             self.janela_criacao, text="[Fechar]",
-            command=lambda: ocultar_frame(self.janela_criacao)
-        ).grid(column=0, row=3)
+            command=lambda: self.toplevel.withdraw()
+        ).grid(column=0, row=4, sticky="sw")
 
         ctk.CTkButton(
             self.janela_criacao, text="[Criar Capitulo]",
             command=lambda: self._salvar_criacao()
-        ).grid(column=1, row=3, columnspan=2)
+        ).grid(column=1, row=4,sticky="se" ,columnspan=2)

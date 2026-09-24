@@ -35,8 +35,9 @@ def nova_imagem_galeria(caminho, descricao):
         "descricao": descricao
     }
 
-def nova_observacao(nome,titulo,conteudo):
+def nova_observacao(nome,titulo,conteudo,tipo="Personagem"):
     return{
+        "tipo": tipo,
         "nome": nome,
         "titulo": titulo,
         "conteudo": conteudo
@@ -61,9 +62,10 @@ def novo_sistemapoder(nome,historia,descricao,regras,vantagens,fraquezas):
     "exemplos": []
 }
 
-def novo_arco (nome, historia):
+def novo_arco (nome, historia, descricao):
     return{
         "id": str(uuid.uuid4()),
         "nome": nome,
-        "historia_id": historia["id"]
+        "historia_id": historia["id"],
+        "descricao": descricao
     }

@@ -51,12 +51,15 @@ Criador-de-mundos/
 ├── venv/
 │
 ├── .gitignore
+├── historia.py
 ├── historias.py
 ├── icone_planeta.ico
 ├── icone_planeta.png
 ├── interface.py
 ├── interface.spec
 ├── LICENSE
+├── capitulo.py
+├── arco.py
 ├── main.py
 ├── modelos.py
 ├── perfil.py
@@ -101,7 +104,6 @@ python interface.py
 
 ## 📌 Em desenvolvimento
 
-* Tratamento automático de arquivos inexistentes
 * Melhorias visuais
 * Pesquisa de personagens
 * Sistema de etiquetas

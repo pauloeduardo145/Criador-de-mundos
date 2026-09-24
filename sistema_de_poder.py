@@ -20,19 +20,27 @@ class SistemaDePoder:
         self.sistema_selecionado = None
 
         self._criar_janela_criacao()
+        self._criar_janela_edicao()
 
     # ---------------------------------------------------------------
     # JANELA DE CRIAÇÃO
     # ---------------------------------------------------------------
 
     def _criar_janela_criacao(self):
+        self.toplevel = ctk.CTkToplevel(self.janela)
+        self.toplevel.geometry("1000x590")
+        self.toplevel.title("Criar sistema de poderes")
+        self.toplevel.resizable(False, False)
+        self.toplevel.protocol("WM_DELETE_WINDOW",self.toplevel.withdraw)
 
-        self.janela_criacao = ctk.CTkFrame(self.janela, width=600, height=500)
-        self.janela_criacao.grid_propagate(False)
+        self.toplevel.withdraw()
+
+        self.janela_criacao = ctk.CTkFrame(self.toplevel, width=1000, height=590)
+        self.janela_criacao.pack(fill="both", expand=True)
         self.janela_criacao.grid_columnconfigure(0, weight=0)
         self.janela_criacao.grid_columnconfigure(1, weight=1)
 
-        for i in range(6):
+        for i in range(7):  # inclui a linha dos botões
             self.janela_criacao.grid_rowconfigure(i, weight=1)
 
         powerlabel = ctk.CTkLabel(self.janela_criacao, text="Adicionar sistema de poderes")
@@ -74,7 +82,7 @@ class SistemaDePoder:
         configurar_textbox(self.text_fraquezas)
 
         powerfechar = ctk.CTkButton(self.janela_criacao, text="[Fechar]",
-                                     command=lambda: ocultar_frame(self.janela_criacao))
+                                     command=lambda: self.toplevel.withdraw())
         powerfechar.grid(column=0, row=6)
 
         powersalvar = ctk.CTkButton(self.janela_criacao, text="[Criar Sistema de poder]",
@@ -111,8 +119,9 @@ class SistemaDePoder:
             print("Selecione a historia primeiro")
             return
 
-        mostrar_frame(self.janela_criacao)
-        self.janela_criacao.focus()
+        self.toplevel.deiconify()
+        self.toplevel.lift()
+        self.toplevel.focus_force()
 
     # ---------------------------------------------------------------
     # CRIAR / SALVAR
@@ -140,12 +149,12 @@ class SistemaDePoder:
             criar_label_sistema_poder(
                 novo,
                 self.frame_lista_conteudo,
-                self.selecionar
+                self.selecionar_sistemapoder
             )
 
-            self.selecionar(novo)
+            self.selecionar_sistemapoder(novo)
 
-            ocultar_frame(self.janela_criacao)
+            self.toplevel.withdraw()
 
             self.entry_nome.delete(0, "end")
             self.text_conteudo.delete("1.0", "end")
@@ -163,21 +172,39 @@ class SistemaDePoder:
     # ---------------------------------------------------------------
 
     def selecionar(self, sistema):
+        self.selecionar_sistemapoder(sistema)
+
+    def selecionar_sistemapoder(self, sistema):
 
         self.sistema_selecionado = sistema
 
         self._limpar_frame_conteudo()
 
+        # Cabeçalho: título à esquerda e botão Editar à direita
+        cabecalho = ctk.CTkFrame(self.frame_lista_conteudo, fg_color="transparent")
+        cabecalho.pack(fill="x", padx=20, pady=(20, 5))
+
+        ctk.CTkLabel(
+            cabecalho,
+            text=f"⚡ {sistema['nome']}",
+            font=("Helvetica", 22, "bold")
+        ).pack(side="left")
+
+        ctk.CTkButton(
+            cabecalho,
+            text="✏️ Editar",
+            width=90,
+            command=lambda: self.editar()
+        ).pack(side="right")
+
+        # O nome já está no título
         for chave, valor in sistema.items():
 
-            if chave in ["id", "historia_id"]:
+            if chave in ["id", "historia_id", "nome"]:
                 continue
 
             ctk.CTkLabel(self.frame_lista_conteudo, text=f"{chave}:").pack(anchor="w", padx=10)
             ctk.CTkLabel(self.frame_lista_conteudo, text=str(valor), wraplength=900, justify="left").pack(anchor="w", padx=10)
-
-        edit = ctk.CTkButton(self.frame_lista_conteudo, text="Editar", command=lambda *args: self.editar())
-        edit.pack(pady=10)
 
     def mostrar_todos(self, event=None):
 
@@ -198,7 +225,7 @@ class SistemaDePoder:
         )
         titulo.pack(pady=10, anchor="w", padx=20)
 
-        self.mostrar_no_conteudo(self.frame_lista_conteudo, sistemas, self.selecionar, "nome", 1, 1)
+        self.mostrar_no_conteudo(self.frame_lista_conteudo, sistemas, self.selecionar_sistemapoder, "nome", 1, 1)
 
     # ---------------------------------------------------------------
     # EDITAR
@@ -206,66 +233,127 @@ class SistemaDePoder:
 
     def editar(self, *args):
 
-        if self.sistema_selecionado is None:
+        if self.obter_historia_selecionada() is None:
+            print("Nenhuma história selecionada")
+            return
+
+        sistema = self.sistema_selecionado
+
+        if sistema is None:
             print("Nenhum sistema de poder selecionado")
             return
 
-        self._limpar_frame_conteudo()
+        self.sistema_em_edicao = sistema
 
-        titulo = ctk.CTkLabel(self.frame_lista_conteudo, text="Modo Edição", font=("Helvetica", 18, "bold"))
-        titulo.pack(pady=10, anchor="w", padx=20)
+        self.entry_nome_edicao.delete(0, "end")
+        self.entry_nome_edicao.insert(0, sistema["nome"])
 
-        # Nome
-        ctk.CTkLabel(self.frame_lista_conteudo, text="Nome:").pack(anchor="w", padx=10)
-        nome = ctk.CTkEntry(self.frame_lista_conteudo)
-        nome.insert(0, self.sistema_selecionado["nome"])
-        nome.pack(fill="x", padx=10, pady=5)
-        configurar_entry(nome)
+        for chave, caixa in self.campos_edicao.items():
+            caixa.delete("1.0", "end")
+            caixa.insert("1.0", sistema.get(chave, ""))
 
-        # Descrição
-        ctk.CTkLabel(self.frame_lista_conteudo, text="Descrição:").pack(anchor="w", padx=10)
-        descricao = ctk.CTkTextbox(self.frame_lista_conteudo, height=100)
-        descricao.insert("1.0", self.sistema_selecionado["descricao"])
-        descricao.pack(fill="x", padx=10, pady=5)
-        configurar_textbox(descricao)
+        self.toplevel_edicao.deiconify()
+        self.toplevel_edicao.lift()
+        self.toplevel_edicao.focus_force()
+        self.entry_nome_edicao.focus()
 
-        # Regras
-        ctk.CTkLabel(self.frame_lista_conteudo, text="Regras:").pack(anchor="w", padx=10)
-        regras = ctk.CTkTextbox(self.frame_lista_conteudo, height=100)
-        regras.insert("1.0", self.sistema_selecionado["regras"])
-        regras.pack(fill="x", padx=10, pady=5)
-        configurar_textbox(regras)
+    def _salvar_edicao(self):
 
-        # Vantagens
-        ctk.CTkLabel(self.frame_lista_conteudo, text="Vantagens:").pack(anchor="w", padx=10)
-        vantagens = ctk.CTkTextbox(self.frame_lista_conteudo, height=100)
-        vantagens.insert("1.0", self.sistema_selecionado["vantagens"])
-        vantagens.pack(fill="x", padx=10, pady=5)
-        configurar_textbox(vantagens)
+        historia_selecionada = self.obter_historia_selecionada()
+        sistema = self.sistema_em_edicao
 
-        # Fraquezas
-        ctk.CTkLabel(self.frame_lista_conteudo, text="Fraquezas:").pack(anchor="w", padx=10)
-        fraquezas = ctk.CTkTextbox(self.frame_lista_conteudo, height=100)
-        fraquezas.insert("1.0", self.sistema_selecionado["fraquezas"])
-        fraquezas.pack(fill="x", padx=10, pady=5)
-        configurar_textbox(fraquezas)
+        if historia_selecionada is None or sistema is None:
+            return
 
-        def salvar_edicao():
+        nome = self.entry_nome_edicao.get().strip()
 
-            self.sistema_selecionado["nome"] = nome.get()
-            self.sistema_selecionado["descricao"] = descricao.get("1.0", "end-1c")
-            self.sistema_selecionado["regras"] = regras.get("1.0", "end-1c")
-            self.sistema_selecionado["vantagens"] = vantagens.get("1.0", "end-1c")
-            self.sistema_selecionado["fraquezas"] = fraquezas.get("1.0", "end-1c")
+        if not nome:
+            messagebox.showwarning(
+                "Editar sistema de poder", "Digite um nome para o sistema de poder.",
+                parent=self.toplevel_edicao
+            )
+            return
 
-            historias.salvar_dados(historias.Historias)
+        if nome != sistema["nome"] and any(
+            s["nome"] == nome for s in historia_selecionada["sistemas_poder"]
+        ):
+            messagebox.showwarning(
+                "Editar sistema de poder", "Já existe um sistema de poder com esse nome.",
+                parent=self.toplevel_edicao
+            )
+            return
 
-            self.selecionar(self.sistema_selecionado)
+        sistema["nome"] = nome
 
-        botao_salvar = ctk.CTkButton(self.frame_lista_conteudo, text="Salvar", command=lambda: salvar_edicao())
-        botao_salvar.pack(pady=10)
+        for chave, caixa in self.campos_edicao.items():
+            sistema[chave] = caixa.get("1.0", "end-1c")
 
-        self._arearolavel()
+        historias.atualizar()
+
+        self.toplevel_edicao.withdraw()
+
+        self.selecionar_sistemapoder(sistema)
+
+    def _criar_janela_edicao(self):
+        self.sistema_em_edicao = None
+
+        self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        self.toplevel_edicao.geometry("800x650")
+        self.toplevel_edicao.title("Editar sistema de poderes")
+        self.toplevel_edicao.resizable(False, False)
+        self.toplevel_edicao.protocol("WM_DELETE_WINDOW", self.toplevel_edicao.withdraw)
+
+        self.toplevel_edicao.withdraw()
+
+        frame = ctk.CTkFrame(self.toplevel_edicao)
+        frame.pack(fill="both", expand=True)
+
+        frame.grid_columnconfigure(0, weight=0)
+        frame.grid_columnconfigure(1, weight=1)
+
+        for i in range(2, 6):
+            frame.grid_rowconfigure(i, weight=1)
+
+        ctk.CTkLabel(frame, text="Editar sistema de poderes").grid(
+            column=0, row=0, columnspan=2, pady=10
+        )
+
+        ctk.CTkLabel(frame, text="Nome:").grid(column=0, row=1, padx=10)
+
+        self.entry_nome_edicao = ctk.CTkEntry(frame, placeholder_text="Nome do sistema de poder")
+        self.entry_nome_edicao.grid(column=1, row=1, sticky="ew", padx=10)
+        self.entry_nome_edicao.bind("<Return>", lambda e: self._salvar_edicao())
+        configurar_entry(self.entry_nome_edicao)
+
+        campos = [
+            ("descricao", "Descrição:"),
+            ("regras", "Regras:"),
+            ("vantagens", "Vantagens:"),
+            ("fraquezas", "Fraquezas:"),
+        ]
+
+        self.campos_edicao = {}
+
+        for indice, (chave, rotulo) in enumerate(campos):
+            linha = 2 + indice
+
+            ctk.CTkLabel(frame, text=rotulo).grid(column=0, row=linha, padx=10)
+
+            caixa = ctk.CTkTextbox(frame, height=80, activate_scrollbars=True)
+            caixa.grid(column=1, row=linha, sticky="nsew", padx=10, pady=5)
+            configurar_textbox(caixa)
+
+            self.campos_edicao[chave] = caixa
+
+        ctk.CTkButton(
+            frame, text="Fechar",
+            command=lambda: self.toplevel_edicao.withdraw()
+        ).grid(column=0, row=6, padx=10, pady=10)
+
+        ctk.CTkButton(
+            frame, text="Salvar",
+            command=lambda: self._salvar_edicao()
+        ).grid(column=1, row=6, padx=10, pady=10)
 
     # ---------------------------------------------------------------
     # EXCLUIR

@@ -159,13 +159,13 @@ def criar_label_obs(nome, frame, callback=None):
 
     return obs
 
-def criar_observacoes(historia,nome,titulo,conteudo):
+def criar_observacoes(historia,nome,titulo,conteudo,tipo="Personagem"):
 
     if historia is None:
         print("Nenhuma história selecionada")
         return
 
-    observacao = nova_observacao(nome,titulo,conteudo)
+    observacao = nova_observacao(nome,titulo,conteudo,tipo)
 
     historia["observacoes"].append(observacao)
 
@@ -180,13 +180,13 @@ def mostrar_imagem(caminho,tamanho):
 
     return img_ctk
 
-def criar_arco(historia, nome):
+def criar_arco(historia, nome, descricao):
 
     if historia is None:
         print("Nenhuma história selecionada")
         return
 
-    arco = novo_arco(nome, historia)
+    arco = novo_arco(nome, historia, descricao)
 
     historia["arcos"].append(arco)
 

@@ -17,22 +17,12 @@ from widgets import *
 import historias
 from datetime import datetime
 import os
-from tkinter import messagebox
 
 ctk.set_appearance_mode("dark")
 
 historico = []
 
 data_atual = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-historia_selecionada = None
-
-def histOria(frame):
-    if historia_selecionada is None:
-        print("Selecione a historia primeiro")
-    else:
-        mostrar_frame(frame)
-        frame.focus()
 
 #JANELAS
 
@@ -60,20 +50,6 @@ except Exception as erro_icone:
     print(f"Não foi possível carregar o ícone da janela: {erro_icone}")
 
 #CONTEUDO
-
-def carregar_interface():
-
-    for widget in frame_lista.winfo_children():
-        widget.destroy()
-
-    for indice, historia in enumerate(historias.Historias):
-
-        criar_label(
-            historia,
-            frame_lista,
-            selecionar_historia,
-            row=indice
-        )
 
 frame_conteudo = ctk.CTkFrame(janela)
 #frame_conteudo.grid_propagate(False)
@@ -129,7 +105,7 @@ frame_historia.grid(column=0,row=1, padx=10,pady=5)
 menu = ctk.CTkLabel(frame_historia,text='HISTÓRIAS')
 menu.grid(column=0,row=0,sticky="n",padx=10,pady=5)
 
-criah = ctk.CTkButton(frame_historia, text="[Criar historias]",command=lambda:mostrar_frame(frame_nomeh))
+criah = ctk.CTkButton(frame_historia, text="[Criar historias]",command=lambda:gerenciador_historia.abrir_criacao())
 criah.grid(column=0,row=2,sticky="s",padx=10,pady=6)
 
 #LABEL DO HISTORIA
@@ -163,24 +139,9 @@ lista.grid_rowconfigure(5,weight=0)
 lista.grid_rowconfigure(6,weight=0)
 lista.grid(column=0,row=2,sticky="n",padx=10,pady=5)
 
-#LABELS DO INFORMAÇÕES
-nome_historia = ctk.CTkLabel(lista,text='Nome:')
-nome_historia.grid(column=0,row=0,sticky="w",padx=10,pady=5)
-
-arc = ctk.CTkLabel(lista,text='Arcos:')
-arc.grid(column=0,row=1,sticky="w",padx=10,pady=5)
-
-cap = ctk.CTkLabel(lista,text='Capitulos:')
-cap.grid(column=0,row=2,sticky="w",padx=10,pady=5)
-
-pers = ctk.CTkLabel(lista,text='Personagens:')
-pers.grid(column=0,row=3,sticky="w",padx=10,pady=5)
-
-ue = ctk.CTkLabel(lista,text='Ultima Edição:')
-ue.grid(column=0,row=4,sticky="w",padx=10,pady=5)
-
-sp = ctk.CTkLabel(lista,text='Sistema(as) de Poder(es):')
-sp.grid(column=0,row=5,sticky="w",padx=10,pady=5)
+# Os labels do painel de informações (Nome, Arco, Capítulo, Personagem,
+# Última Edição, Sistema de Poder) agora são criados pela classe Historia,
+# que recebe este frame `lista` como painel_info.
 
 # FUNÇÃO DE PADRONIZAÇÃO E RECALCULA A AREA ROLÁVEL
 
@@ -198,9 +159,7 @@ def arearolavel():
     frame_lista_conteudo._parent_canvas.configure(scrollregion=frame_lista_conteudo._parent_canvas.bbox("all"))
     frame_lista_conteudo._parent_canvas.yview_moveto(0)
 
-# ATALHOS DE NAVEGAÇÃO
 
-from entry_textbox import configurar_entry,configurar_textbox
 
 #FUNÇÕES GENÉRICAS DE LISTAGEM (usadas por Personagem, Capítulo, Sistema de Poder e Observações)
 
@@ -263,6 +222,27 @@ def mostrar_no_conteudo(frame, itens, callback, chave_nome,li,col):
             command=lambda i=item: navegar(callback, i)
         ).grid(row=linha, column=coluna, padx=5, pady=5, sticky="ew")
 
+def mostrar_secao(frame, titulo, itens, callback, chave_nome):
+
+    secao = ctk.CTkFrame(frame, fg_color="transparent")
+    secao.pack(fill="x", padx=10, pady=10)
+
+    label = ctk.CTkLabel(
+        secao,
+        text=f"{titulo} ({len(itens)})",
+        font=("Helvetica", 18, "bold")
+    )
+    label.pack(anchor="w", pady=(5, 5))
+
+    mostrar_no_conteudo(
+        secao,
+        itens,
+        callback,
+        chave_nome,
+        6,
+        6
+    )
+
 #GERENCIADORES (ARCO, CAPITULO, PERSONAGEM)
 
 from arco import Arco
@@ -270,12 +250,48 @@ from capitulo import Capitulo
 from personagem import Personagem
 from sistema_de_poder import SistemaDePoder
 from observacao import Observacao
+from historia import Historia
+
+def selecionar_sistemapoder(sistemapode):
+    gerenciador_sistema_poder.selecionar(sistemapode)
+
+def selecionar_observacoes(observacao):
+    gerenciador_observacao.selecionar(observacao)
+
+def selecionar_personagem(personagem):
+    gerenciador_personagem.selecionar_personagem(personagem)
+
+def selecionar_capitulo(capitulo):
+    gerenciador_capitulo.selecionar_capitulo(capitulo)
+
+def selecionar_arco(arco):
+    gerenciador_arco.selecionar_arco(arco)
+
+gerenciador_historia = Historia(
+    janela,
+    frame_lista,
+    lista,
+    frame_lista_conteudo,
+    mostrar_secao,
+    limpar_frame_conteudo,
+    arearolavel,
+    secoes=[
+        ("Personagens", "personagens", selecionar_personagem, "nome"),
+        ("Arcos", "arcos", selecionar_arco, "nome"),
+        ("Capítulos", "capitulos", selecionar_capitulo, "nome"),
+        ("Sistemas de Poder", "sistemas_poder", selecionar_sistemapoder, "nome"),
+        ("Observações", "observacoes", selecionar_observacoes, "titulo"),
+    ]
+)
 
 gerenciador_arco = Arco(
     janela,
     frame_lista_conteudo,
-    obter_historia_selecionada=lambda: historia_selecionada,
-    apos_criar=lambda h: selecionar_historia(h)
+    obter_historia_selecionada=lambda: gerenciador_historia.historia_selecionada,
+    apos_criar=lambda h: gerenciador_historia.selecionar(h),
+    limpar_frame_conteudo=limpar_frame_conteudo,
+    arearolavel=arearolavel,
+    abrir_capitulo=lambda c: navegar(selecionar_arco, c)
 )
 
 gerenciador_capitulo = Capitulo(
@@ -283,8 +299,8 @@ gerenciador_capitulo = Capitulo(
     frame_lista_conteudo,
     mostrar_no_conteudo,
     gerenciador_arco,
-    obter_historia_selecionada=lambda: historia_selecionada,
-    apos_criar=lambda h: selecionar_historia(h)
+    obter_historia_selecionada=lambda: gerenciador_historia.historia_selecionada,
+    apos_criar=lambda h: gerenciador_historia.selecionar(h)
 )
 
 gerenciador_personagem = Personagem(
@@ -292,30 +308,28 @@ gerenciador_personagem = Personagem(
     frame_lista_conteudo,
     mostrar_no_conteudo,
     mostrar_cards_com_imagem,
-    obter_historia_selecionada=lambda: historia_selecionada,
-    apos_criar=lambda h: selecionar_historia(h)
+    obter_historia_selecionada=lambda: gerenciador_historia.historia_selecionada,
+    apos_criar=lambda h: gerenciador_historia.selecionar(h)
 )
 
 gerenciador_sistema_poder = SistemaDePoder(
     janela,
     frame_lista_conteudo,
     mostrar_no_conteudo,
-    obter_historia_selecionada=lambda: historia_selecionada,
-    apos_criar=lambda h: selecionar_historia(h)
+    obter_historia_selecionada=lambda: gerenciador_historia.historia_selecionada,
+    apos_criar=lambda h: gerenciador_historia.selecionar(h)
 )
 
 gerenciador_observacao = Observacao(
     janela,
     frame_lista_conteudo,
-    obter_historia_selecionada=lambda: historia_selecionada,
-    apos_criar=lambda h: selecionar_historia(h),
+    obter_historia_selecionada=lambda: gerenciador_historia.historia_selecionada,
+    apos_criar=lambda h: gerenciador_historia.selecionar(h),
     # "navegar" só é definido mais abaixo no arquivo; a lambda resolve o
     # nome no momento da chamada (late binding), então funciona normalmente.
     navegar=lambda funcao, *args: navegar(funcao, *args)
 )
 
-def selecionar_sistemapoder(sistemapode):
-    gerenciador_sistema_poder.selecionar(sistemapode)
 
 def edicao_sistempoder(*args):
     gerenciador_sistema_poder.editar()
@@ -323,17 +337,11 @@ def edicao_sistempoder(*args):
 def mostrar_todos_sistemas_poder(event=None):
     gerenciador_sistema_poder.mostrar_todos(event)
 
-def selecionar_observacoes(observacao):
-    gerenciador_observacao.selecionar(observacao)
-
 def edicao_observacao(*args):
     gerenciador_observacao.editar()
 
 def mostrar_todas_observacoes(event=None):
     gerenciador_observacao.mostrar_todos(event)
-
-def selecionar_personagem(personagem):
-    gerenciador_personagem.selecionar_personagem(personagem)
 
 def edicao_personagem(*args):
     gerenciador_personagem.edicao_personagem()
@@ -349,9 +357,6 @@ def mostrar_todas_imagens(event=None):
 
 def mostrar_todas_imagens_da_galeria(event=None):
     gerenciador_personagem.mostrar_todas_imagens_da_galeria(event)
-
-def selecionar_capitulo(capitulo):
-    gerenciador_capitulo.selecionar_capitulo(capitulo)
 
 def edicao_capitulo(*args):
     gerenciador_capitulo.edicao_capitulo()
@@ -374,84 +379,14 @@ def voltar():
 
         funcao(*args)
 
-def selecionar_historia(historia):
-    global historia_selecionada
-
-    historia_selecionada = historia
-
-    historia["ultima_edicao"] = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-
-    nome_historia.configure(text=f"Nome: {historia['nome']}")
-
-    qtdarco = len(historia["arcos"])
-
-    if qtdarco <= 1:
-        arc.configure(text=f"Arco: {len(historia["arcos"])}")
-    else:
-        arc.configure(text=f"Arcos: {len(historia["arcos"])}")
-
-    qtd = len(historia['capitulos'])
-
-    if qtd == 1:
-        cap.configure(text=f"Capítulo: {qtd}")
-    else:
-        cap.configure(text=f"Capítulos: {qtd}")
-
-    ue.configure(text=f"UE: {historia.get('ultima_edicao', 'Nunca')}")
-
-    pers.configure(text=f"Personagens: {len(historia['personagens'])}")
-    
-    if historia_selecionada["sistemas_poder"]:
-        sp.configure(text=f"Sistema P: {historia_selecionada['sistemas_poder'][0]['nome']}")
-    else:
-        sp.configure(text="Sistema P: Nenhum")
-
-
-    limpar_frame_conteudo()
-
-    mostrar_no_conteudo(frame_lista_conteudo,historia["personagens"],selecionar_personagem,"nome",6,6)
-
-    mostrar_no_conteudo(frame_lista_conteudo,historia["capitulos"],selecionar_capitulo,"nome",6,6)
-
-    mostrar_no_conteudo(frame_lista_conteudo,historia["sistemas_poder"],selecionar_sistemapoder,"nome",6,6)
-
-    mostrar_no_conteudo(frame_lista_conteudo,historia["observacoes"],selecionar_observacoes,"titulo",6,6)
-
 #SELECIONAR ...
-
-def excluir_historia(nome):
-
-    historia = next(
-        (h for h in historias.Historias if h["nome"] == nome),
-        None
-    )
-
-    if historia is None:
-        return
-
-    if not messagebox.askyesno(
-        "Excluir",
-        f'Deseja realmente excluir a história "{nome}"?'
-    ):
-        return
-
-    historias.Historias.remove(historia)
-
-    historias.salvar_dados(historias.Historias)
-
-    global historia_selecionada
-    historia_selecionada = None
-
-    carregar_interface()
-
-    limpar_frame_conteudo()
 
 def excluir_item(*args):
 
     limpar_frame_conteudo()
 
-    tipo_var = ctk.StringVar(value="Personagem")
-    item_var = ctk.StringVar(value="")
+    tipo_var = ctk.StringVar(value="Escolha")
+    item_var = ctk.StringVar(value="Nenhum")
 
     option_item = None
 
@@ -460,19 +395,22 @@ def excluir_item(*args):
         nonlocal option_item
 
         if opcao == "Personagem":
-            itens = [p["nome"] for p in historia_selecionada["personagens"]]
+            itens = [p["nome"] for p in gerenciador_historia.historia_selecionada["personagens"]]
 
         elif opcao == "História":
             itens = [h["nome"] for h in historias.Historias]
 
         elif opcao == "Arco":
-            itens = [a["nome"] for a in historia_selecionada["arcos"]]
+            itens = [a["nome"] for a in gerenciador_historia.historia_selecionada["arcos"]]
 
         elif opcao == "Capítulo":
-            itens = [c["nome"] for c in historia_selecionada["capitulos"]]
+            itens = [c["nome"] for c in gerenciador_historia.historia_selecionada["capitulos"]]
 
         elif opcao == "Observação":
-            itens = [o["titulo"] for o in historia_selecionada["observacoes"]]
+            itens = [o["titulo"] for o in gerenciador_historia.historia_selecionada["observacoes"]]
+
+        elif opcao == "Sistemapoder":
+            itens = [s["nome"] for s in gerenciador_historia.historia_selecionada["sistemas_poder"]]
 
         else:
             itens = []
@@ -510,8 +448,11 @@ def excluir_item(*args):
         elif tipo == "Observação":
             gerenciador_observacao.excluir(item)
 
+        elif tipo == "Sistemapoder":
+            gerenciador_sistema_poder.excluir(item)
+
         elif tipo == "História":
-            excluir_historia(item)
+            gerenciador_historia.excluir(item)
 
     ctk.CTkOptionMenu(
         frame_lista_conteudo,
@@ -520,13 +461,12 @@ def excluir_item(*args):
             "História",
             "Arco",
             "Capítulo",
-            "Observação"
+            "Observação",
+            "Sistemapoder"
         ],
         variable=tipo_var,
         command=atualizar_lista_exclusao
     ).pack(pady=10)
-
-    atualizar_lista_exclusao("Personagem")
 
     ctk.CTkButton(
         frame_lista_conteudo,
@@ -547,36 +487,6 @@ perfil_config.grid(column=0,row=0,sticky="n",padx=5,pady=5)
 
 exit_button = ctk.CTkButton(caixa_frame,height=10,text='Exit',fg_color="black",width=4,font=("Helvetica", 7),command=lambda: janela.quit())
 exit_button.grid(column=1,row=0,sticky="n",padx=5,pady=5)
-
-#CRIAR INTERFACE
-
-frame_nomeh = ctk.CTkFrame(janela,fg_color="black",width=200, height=120)
-frame_nomeh.grid_propagate(False)
-frame_nomeh.grid_columnconfigure(0, weight=1)
-frame_nomeh.grid_columnconfigure(1, weight=1)
-
-frame_nomeh.place(relx=0.5, rely=0.5, anchor="center")
-frame_nomeh.place_forget()
-
-botaofake = ctk.CTkLabel(frame_nomeh,text="Criar Historia")
-botaofake.grid(column=0,row=0,padx=10,pady=10,columnspan=2)
-
-def enter_historia(events):
-    criar_historia(nome.get())
-    carregar_interface()
-    ocultar_frame(frame_nomeh)
-
-nome = ctk.CTkEntry(frame_nomeh,placeholder_text="Nome da Historia")
-nome.bind("<Return>", enter_historia)
-nome.grid(column=0,row=1,sticky="nsew",columnspan=2)
-nome.focus()
-configurar_entry(nome)
-
-criar_h = ctk.CTkButton(frame_nomeh,text="Criar Historia",command=lambda: (criar_historia(nome.get()),carregar_interface(),ocultar_frame(frame_nomeh),print(historias.Historias),print(len(historias.Historias))))
-criar_h.grid(column=1,row=3,padx=5,pady=10,sticky="s")
-
-f = ctk.CTkButton(frame_nomeh,text="Fechar",command=lambda: ocultar_frame(frame_nomeh))
-f.grid(column=0,row=3,padx=5)
 
 #MOSTRAR NO CONTEUDO
 
@@ -615,17 +525,17 @@ botao_excluir.grid(column=8,row=0,sticky="n",padx=5,pady=5)
 #ATALHOS GLOBAIS
 
 def sh():
-    if historia_selecionada is not None:
+    if gerenciador_historia.historia_selecionada is not None:
         pass
     else:
-        mostrar_frame(frame_nomeh)
+        gerenciador_historia.abrir_criacao()
 
-janela.bind("<F5>", lambda e: selecionar_historia(historia_selecionada))
+janela.bind("<F5>", lambda e: gerenciador_historia.selecionar(gerenciador_historia.historia_selecionada))
 
 janela.bind("<Control-n>", lambda event: sh())
 
 def sc():
-    if historia_selecionada and gerenciador_capitulo.capitulo_selecionado is None:
+    if gerenciador_historia.historia_selecionada and gerenciador_capitulo.capitulo_selecionado is None:
         gerenciador_capitulo.abrir_criacao()
 
 janela.bind("<Control-Key-c>", lambda event: sc())
@@ -647,6 +557,11 @@ janela.bind("<Control-Key-i>", edicao_capitulo)
 janela.bind("<Key-Delete>", excluir_item)
 janela.bind("<Control-Key-Delete>", excluir_item)
 
-carregar_interface()
+from confg import Config
+
+config = Config(janela)
+config.janela_confg()
+
+gerenciador_historia.carregar_lista()
 
 janela.mainloop()
