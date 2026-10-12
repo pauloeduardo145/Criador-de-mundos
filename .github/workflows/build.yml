@@ -106,6 +106,13 @@ jobs:
         run: |
           mkdir -p AppDir/usr/bin
           cp dist/CriadorDeMundos AppDir/usr/bin/criadordemundos
+          chmod +x AppDir/usr/bin/criadordemundos
+          cat > AppDir/AppRun <<'APPRUN'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/usr/bin/criadordemundos" "$@"
+          APPRUN
+          chmod +x AppDir/AppRun
           cat > AppDir/criadordemundos.desktop <<EOF
           [Desktop Entry]
           Name=Criador de Mundos
