@@ -65,6 +65,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
       - name: Baixar binário Linux gerado no job anterior
         uses: actions/download-artifact@v4
         with:
@@ -121,7 +124,7 @@ jobs:
           Type=Application
           Categories=Utility;
           EOF
-          curl -s -o AppDir/criadordemundos.png https://raw.githubusercontent.com/AppImage/AppImageKit/master/resources/appimagetool.png
+          cp icone_planeta.png AppDir/criadordemundos.png
 
       - name: Baixar appimagetool
         run: |
