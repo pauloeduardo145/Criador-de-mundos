@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import historias
-from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao, novo_arco
+from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao, novo_arco, nova_especie
 from PIL import Image
 
 def mostrar_frame(frame):
@@ -38,7 +38,63 @@ def criar_label(nova_historia, frame_historia, callback=None, row=0):
 
     return label
 
-def criar_personagem(historia,nome,imagem,personalidade,aparencia,his,relacoes,poderes,fraq,hab):
+def criar_especie(historia, nome, descricao):
+
+    if not nome.strip():
+        print("Digite um nome.")
+        return
+
+    if historia is None:
+        print("Selecione uma história primeiro")
+        return
+
+    for e in historia["especies"]:
+        if e["nome"] == nome:
+            print("Já existe uma especie com esse nome.")
+            return e
+
+    especie = nova_especie(nome,historia, descricao)
+
+    historia["especies"].append(especie)
+
+    historias.atualizar()
+
+    return especie
+
+
+def criar_label_especie(especie, frame, callback=None):
+
+    botao = ctk.CTkButton(
+        frame,
+        text=especie["nome"],
+        command=lambda:
+            callback(especie)
+            if callback else None
+    )
+
+    botao.pack(pady=3)
+
+    return botao
+
+def atualizar_especie(historia, especie, nome, descricao):
+    nome = nome.strip()
+
+    if not nome:
+        print("Digite o nome da espécie")
+        return False
+
+    for e in historia.get("especies", []):
+        if e["id"] != especie["id"] and e["nome"].casefold() == nome.casefold():
+            print("Já existe uma espécie com esse nome")
+            return False
+
+    especie["nome"] = nome
+    especie["descricao"] = descricao.strip()
+
+    historias.atualizar()
+    return True
+
+def criar_personagem(historia,nome,idade,especie,imagem,personalidade,aparencia,his,relacoes,sistema,hab):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -53,7 +109,7 @@ def criar_personagem(historia,nome,imagem,personalidade,aparencia,his,relacoes,p
             print("Já existe um personagem com esse nome.")
             return p
 
-    personagem = novo_personagem(nome, historia,imagem,personalidade,aparencia,his,relacoes,poderes,fraq,hab)
+    personagem = novo_personagem(nome,idade,especie,historia,imagem,personalidade,aparencia,his,relacoes,sistema,hab)
 
     historia["personagens"].append(personagem)
 

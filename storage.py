@@ -32,15 +32,46 @@ def limpar_backups_antigos(max_quantidade=30):
             print(f"Erro ao remover {arquivos[0]}: {e}")
         arquivos.pop(0)
 
+def remover_poderes_fraquezas(dados):
+    alterou = False
+
+    if not isinstance(dados, list):
+        return alterou
+
+    for historia in dados:
+        if not isinstance(historia, dict):
+            continue
+
+        for personagem in historia.get("personagens", []):
+            if not isinstance(personagem, dict):
+                continue
+
+            for chave in ("poderes", "fraquezas"):
+                if chave in personagem:
+                    del personagem[chave]
+                    alterou = True
+
+    return alterou
+
 def carregar_dados():
     if not os.path.exists(ARQUIVO_DADOS):
         return []
     try:
         with open(ARQUIVO_DADOS, "r", encoding="utf-8") as f:
-            return json.load(f)
+            dados = json.load(f)
     except Exception as e:
         print(f"Erro ao carregar dados: {e}")
         return []
+
+    try:
+        if remover_poderes_fraquezas(dados):
+            shutil.copy2(ARQUIVO_DADOS, os.path.join(PASTA_PROJETO, "historias_antes_da_limpeza.json"))
+            with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
+                json.dump(dados, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Erro ao limpar poderes e fraquezas: {e}")
+
+    return dados
     
 def salvar_dados(dados):
     # 1. Salva o JSON
@@ -111,4 +142,4 @@ def salvar_perfil(perfil):
 # Exemplo de uso:
 # dados = carregar_dados()
 # dados.append({"historia": "Nova aventura"})
-# salvar_dados(dados)   
+# salvar_dados(dados)

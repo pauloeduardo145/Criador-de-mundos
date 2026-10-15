@@ -10,12 +10,23 @@ def nova_historia(nome):
         "arcos": [],
         "personagens": [],
         "sistemas_poder": [],
-        "observacoes": []
+        "observacoes": [],
+        "especies": []
     }
 
-def novo_personagem(nome, historia,caminho_imagem,personalidade,aparencia,his,relacoes,poderes,fraq,hab):
+def nova_especie(nome, historia, descricao=""):
+    return{
+        "id": str(uuid.uuid4()),
+        "nome": nome,
+        "historia_id": historia["id"],
+        "descricao": descricao
+    }
+
+def novo_personagem(nome, idade,especie,historia,caminho_imagem,personalidade,aparencia,his,relacoes,sistema,hab):
     return {
         "nome": nome,
+        "idade": idade,
+        "especie": especie["id"] if especie else "",
         "id": str(uuid.uuid4()),
         "imagens": caminho_imagem,
         "galeria": [],
@@ -24,8 +35,7 @@ def novo_personagem(nome, historia,caminho_imagem,personalidade,aparencia,his,re
         "aparencia": aparencia,
         "historia": his,
         "relacoes": relacoes,
-        "poderes": poderes,
-        "fraquezas": fraq,
+        "sistema_poder": sistema["id"] if sistema else "",
         "habilidades": hab
     }
 
