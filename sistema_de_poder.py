@@ -9,9 +9,10 @@ from entry_textbox import configurar_entry, configurar_textbox
 class SistemaDePoder:
 
     def __init__(self, janela, frame_lista_conteudo, mostrar_no_conteudo,
-                 obter_historia_selecionada, apos_criar=None):
+                 obter_historia_selecionada, apos_criar=None, ao_criar_sistema=None):
 
         self.janela = janela
+        self.ao_criar_sistema = ao_criar_sistema
         self.frame_lista_conteudo = frame_lista_conteudo
         self.mostrar_no_conteudo = mostrar_no_conteudo
         self.obter_historia_selecionada = obter_historia_selecionada
@@ -165,7 +166,8 @@ class SistemaDePoder:
             if self.apos_criar:
                 self.apos_criar(historia_selecionada)
 
-            print(novo)
+            if self.ao_criar_sistema:
+                self.ao_criar_sistema(novo)
 
     # ---------------------------------------------------------------
     # SELECIONAR / LISTAR

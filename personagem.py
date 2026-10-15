@@ -8,12 +8,18 @@ import storage
 import uuid
 import historias
 
+ESPECIE_PADRAO = "Selecionar espécie"
+SISTEMA_PADRAO = "Selecionar sistema de poder"
+
 
 class Personagem:
     def __init__(self, janela, frame_conteudo, mostrar_no_conteudo, mostrar_cards_com_imagem,
-                 obter_historia_selecionada=None, apos_criar=None):
+                 obter_historia_selecionada=None, apos_criar=None, abrir_criacao_especie=None,
+                 abrir_criacao_sistema_poder=None):
 
         self.janela = janela
+        self.abrir_criacao_especie = abrir_criacao_especie
+        self.abrir_criacao_sistema_poder = abrir_criacao_sistema_poder
         self.frame_conteudo = frame_conteudo
         self.mostrar_no_conteudo = mostrar_no_conteudo
         self.mostrar_cards_com_imagem = mostrar_cards_com_imagem
@@ -86,6 +92,92 @@ class Personagem:
 
         return alterou
 
+    def _nome_especie(self, id_especie):
+        historia = self._historia_selecionada()
+
+        if historia is None or not id_especie:
+            return "—"
+
+        return next(
+            (e["nome"] for e in historia.get("especies", []) if e["id"] == id_especie),
+            "—"
+        )
+
+    def _nomes_especies(self):
+        historia = self._historia_selecionada()
+        especies = historia.get("especies", []) if historia else []
+        return [e["nome"] for e in especies]
+
+    def _preencher_menu_especie(self, menu, selecionada=None):
+        nomes = self._nomes_especies()
+        menu.configure(values=[ESPECIE_PADRAO] + nomes)
+        menu.set(selecionada if selecionada in nomes else ESPECIE_PADRAO)
+
+    def _carregar_especies_edicao(self, id_especie_atual):
+        historia = self._historia_selecionada()
+        especies = historia.get("especies", []) if historia else []
+
+        atual = next((e["nome"] for e in especies if e["id"] == id_especie_atual), None)
+        self._preencher_menu_especie(self.especie_edicao, atual)
+
+    def _ao_escolher_especie(self, menu, valor):
+        if valor != ESPECIE_PADRAO:
+            menu._ultima_escolha = valor
+            return
+
+        if self.abrir_criacao_especie:
+            self.abrir_criacao_especie()
+
+        menu.set(getattr(menu, "_ultima_escolha", ESPECIE_PADRAO))
+
+    def atualizar_especies(self, nova_especie=None):
+        nome_novo = nova_especie["nome"] if nova_especie else None
+
+        for menu, janela in (
+            (self.especie_criacao, self.toplevel),
+            (self.especie_edicao, self.toplevel_edicao),
+        ):
+            atual = menu.get()
+            alvo = nome_novo if nome_novo and janela.winfo_viewable() else atual
+            self._preencher_menu_especie(menu, alvo)
+            menu._ultima_escolha = menu.get()
+
+    def _sistemas_poder(self):
+        historia = self._historia_selecionada()
+        return historia.get("sistemas_poder", []) if historia else []
+
+    def _nome_sistema(self, id_sistema):
+        return next(
+            (s["nome"] for s in self._sistemas_poder() if s["id"] == id_sistema),
+            "—"
+        )
+
+    def _preencher_menu_sistema(self, menu, selecionado=None):
+        nomes = [s["nome"] for s in self._sistemas_poder()]
+        menu.configure(values=[SISTEMA_PADRAO] + nomes)
+        menu.set(selecionado if selecionado in nomes else SISTEMA_PADRAO)
+        menu._ultima_escolha = menu.get()
+
+    def _ao_escolher_sistema(self, menu, valor):
+        if valor != SISTEMA_PADRAO:
+            menu._ultima_escolha = valor
+            return
+
+        if self.abrir_criacao_sistema_poder:
+            self.abrir_criacao_sistema_poder()
+
+        menu.set(getattr(menu, "_ultima_escolha", SISTEMA_PADRAO))
+
+    def atualizar_sistemas(self, novo_sistema=None):
+        nome_novo = novo_sistema["nome"] if novo_sistema else None
+
+        for menu, janela in (
+            (self.sistema_criacao, self.toplevel),
+            (self.sistema_edicao, self.toplevel_edicao),
+        ):
+            alvo = nome_novo if nome_novo and janela.winfo_viewable() else menu.get()
+            self._preencher_menu_sistema(menu, alvo)
+
     def selecionar_personagem(self, personagem):
         self.personagem_selecionado = personagem
 
@@ -116,6 +208,23 @@ class Personagem:
             command=lambda: self.edicao_personagem()
         ).grid(row=0, column=1, sticky="e")
 
+        linha_idade_especie = ctk.CTkFrame(cabecalho, fg_color="transparent")
+        linha_idade_especie.grid(row=1, column=0, columnspan=2, sticky="w", pady=(5, 0))
+
+        idade_texto = str(personagem.get("idade", "")).strip() or "—"
+
+        ctk.CTkLabel(
+            linha_idade_especie,
+            text=f"Idade: {idade_texto}",
+            font=("Arial", 16)
+        ).grid(row=0, column=0, sticky="w", padx=(0, 30))
+
+        ctk.CTkLabel(
+            linha_idade_especie,
+            text=f"Espécie: {self._nome_especie(personagem.get('especie'))}",
+            font=("Arial", 16)
+        ).grid(row=0, column=1, sticky="w")
+
         frame_imagem = ctk.CTkFrame(self.frame_conteudo)
         frame_imagem.grid(row=1, column=0, sticky="n", padx=20)
 
@@ -134,11 +243,17 @@ class Personagem:
 
         for chave, valor in personagem.items():
 
-            if chave in ["imagens", "galeria", "id", "historia_id", "nome"]:
+            if chave in ["imagens", "galeria", "id", "historia_id", "nome", "idade", "especie"]:
                 continue
 
+            rotulo_chave = chave
+
+            if chave == "sistema_poder":
+                rotulo_chave = "sistema de poder"
+                valor = self._nome_sistema(valor)
+
             ctk.CTkLabel(
-                frame_info, text=f"{chave}:", font=("Arial", 16, "bold")
+                frame_info, text=f"{rotulo_chave}:", font=("Arial", 16, "bold")
             ).grid(row=linha, column=0, sticky="nsew", pady=(5, 15))
 
             valor_label = ctk.CTkLabel(
@@ -179,6 +294,17 @@ class Personagem:
 
         self.nome_edicao.delete(0, "end")
         self.nome_edicao.insert(0, personagem["nome"])
+
+        self.idade_edicao.delete(0, "end")
+        self.idade_edicao.insert(0, str(personagem.get("idade", "")))
+        self._carregar_especies_edicao(personagem.get("especie"))
+        self.especie_edicao._ultima_escolha = self.especie_edicao.get()
+
+        atual_sistema = next(
+            (s["nome"] for s in self._sistemas_poder() if s["id"] == personagem.get("sistema_poder")),
+            None
+        )
+        self._preencher_menu_sistema(self.sistema_edicao, atual_sistema)
 
         for chave, caixa in self.campos_edicao.items():
             caixa.delete("1.0", "end")
@@ -358,6 +484,21 @@ class Personagem:
             return
 
         personagem["nome"] = nome
+        personagem["idade"] = self.idade_edicao.get().strip()
+
+        especie_escolhida = next(
+            (e for e in historia.get("especies", []) if e["nome"] == self.especie_edicao.get()),
+            None
+        )
+        personagem["especie"] = especie_escolhida["id"] if especie_escolhida else ""
+
+        sistema_escolhido = next(
+            (s for s in historia.get("sistemas_poder", []) if s["nome"] == self.sistema_edicao.get()),
+            None
+        )
+        personagem["sistema_poder"] = sistema_escolhido["id"] if sistema_escolhido else ""
+        personagem.pop("poderes", None)
+        personagem.pop("fraquezas", None)
 
         for chave, caixa in self.campos_edicao.items():
             personagem[chave] = caixa.get("1.0", "end-1c")
@@ -404,7 +545,7 @@ class Personagem:
         self.personagem_em_edicao = None
 
         self.toplevel_edicao = ctk.CTkToplevel(self.janela)
-        self.toplevel_edicao.geometry("760x760")
+        self.toplevel_edicao.geometry("760x640")
         self.toplevel_edicao.title("Editar personagem")
         self.toplevel_edicao.resizable(False, False)
         self.toplevel_edicao.protocol("WM_DELETE_WINDOW", self.toplevel_edicao.withdraw)
@@ -433,19 +574,61 @@ class Personagem:
         self.nome_edicao.pack(fill="x", padx=10, pady=5)
         configurar_entry(self.nome_edicao)
 
+        # Idade e espécie lado a lado
+        frame_idade_especie = ctk.CTkFrame(corpo, fg_color="transparent")
+        frame_idade_especie.pack(fill="x", padx=10, pady=5)
+
+        frame_idade_especie.grid_columnconfigure(0, weight=1)
+        frame_idade_especie.grid_columnconfigure(1, weight=1)
+
+        # Idade
+
+        coluna_idade = ctk.CTkFrame(frame_idade_especie, fg_color="transparent")
+        coluna_idade.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+        ctk.CTkLabel(coluna_idade, text="Idade:").pack(anchor="w")
+
+        self.idade_edicao = ctk.CTkEntry(
+            coluna_idade,
+            placeholder_text="Ex.: 25 anos"
+        )
+        self.idade_edicao.pack(fill="x", pady=5)
+
+        # Especie
+
+        coluna_especie = ctk.CTkFrame(frame_idade_especie, fg_color="transparent")
+        coluna_especie.grid(row=0, column=1, sticky="ew", padx=(5, 0))
+
+        ctk.CTkLabel(coluna_especie, text="Espécie:").pack(anchor="w")
+
+        self.especie_edicao = ctk.CTkOptionMenu(
+            coluna_especie, values=[ESPECIE_PADRAO],
+            command=lambda valor: self._ao_escolher_especie(self.especie_edicao, valor)
+        )
+        self.especie_edicao.set(ESPECIE_PADRAO)
+        self.especie_edicao.pack(fill="x", pady=5)
+
         campos = [
             ("personalidade", "Personalidade:"),
             ("aparencia", "Aparência:"),
             ("historia", "História:"),
             ("relacoes", "Relações:"),
-            ("poderes", "Poderes:"),
-            ("fraquezas", "Fraquezas:"),
             ("habilidades", "Habilidades:"),
         ]
 
         self.campos_edicao = {}
 
         for chave, rotulo in campos:
+            if chave == "habilidades":
+                ctk.CTkLabel(corpo, text="Sistema de poder:").pack(anchor="w", padx=10, pady=(10, 0))
+
+                self.sistema_edicao = ctk.CTkOptionMenu(
+                    corpo, values=[SISTEMA_PADRAO],
+                    command=lambda valor: self._ao_escolher_sistema(self.sistema_edicao, valor)
+                )
+                self.sistema_edicao.set(SISTEMA_PADRAO)
+                self.sistema_edicao.pack(fill="x", padx=10, pady=5)
+
             ctk.CTkLabel(corpo, text=rotulo).pack(anchor="w", padx=10, pady=(10, 0))
 
             caixa = ctk.CTkTextbox(corpo, height=80)
@@ -634,10 +817,18 @@ class Personagem:
 
     # ---------- Janela "Criar Personagem" ----------
 
+
     def abrir_criacao(self):
-        if self._historia_selecionada() is None:
+        historia = self._historia_selecionada()
+
+        if historia is None:
             print("Selecione a historia primeiro")
             return
+
+        self._preencher_menu_especie(self.especie_criacao)
+        self.especie_criacao._ultima_escolha = ESPECIE_PADRAO
+
+        self._preencher_menu_sistema(self.sistema_criacao)
 
         self.toplevel.deiconify()
         self.toplevel.lift()
@@ -691,18 +882,54 @@ class Personagem:
             print("Nenhuma história selecionada")
             return
 
+        nome_novo = self.personame_criacao.get().strip()
+
+        if not nome_novo:
+            messagebox.showwarning(
+                "Criar personagem", "Digite um nome para o personagem.",
+                parent=self.toplevel
+            )
+            return
+
+        if any(p["nome"] == nome_novo for p in historia["personagens"]):
+            messagebox.showwarning(
+                "Criar personagem", "Já existe um personagem com esse nome.",
+                parent=self.toplevel
+            )
+            return
+
+        nome_sistema = self.sistema_criacao.get()
+
+        sistema = next(
+            (s for s in historia.get("sistemas_poder", []) if s["nome"] == nome_sistema),
+            None
+        )
+
+        nome_especie = self.especie_criacao.get()
+
+        especie = next(
+            (
+                e for e in historia.get("especies", [])
+                if e["nome"] == nome_especie
+            ),None)
+
         novo = criar_personagem(
             historia,
-            self.personame_criacao.get(),
+            nome_novo,
+            self.idade_criacao.get().strip(),
+            especie,
             self.caminho_imagem_criacao,
             self.personalidade_criacao.get("1.0", "end-1c"),
             self.aparencia_criacao.get("1.0", "end-1c"),
-            self.relacoes_criacao.get("1.0", "end-1c"),
             self.historia_criacao.get("1.0", "end-1c"),
-            self.poderes_criacao.get("1.0", "end-1c"),
-            self.fraquezas_criacao.get("1.0", "end-1c"),
+            self.relacoes_criacao.get("1.0", "end-1c"),
+            sistema,
             self.habilidades_criacao.get("1.0", "end-1c")
         )
+
+        if novo is None:
+            return
+
 
         if self.galeria_imagens_criacao is not None:
             novo["galeria"] = self.galeria_imagens_criacao.copy()
@@ -748,6 +975,10 @@ class Personagem:
         self.janela_criacao.grid_rowconfigure(4, weight=0)
         self.janela_criacao.grid_rowconfigure(5, weight=1)
         self.janela_criacao.grid_rowconfigure(6, weight=1)
+        self.janela_criacao.grid_rowconfigure(7, weight=1)
+        self.janela_criacao.grid_rowconfigure(8, weight=1)
+        self.janela_criacao.grid_rowconfigure(9, weight=0)
+        self.janela_criacao.grid_rowconfigure(10, weight=0)
 
         def enter_personagem(event):
             self._salvar_criacao()
@@ -763,43 +994,64 @@ class Personagem:
         self.personame_criacao.grid(column=2, row=0, sticky="we")
         configurar_entry(self.personame_criacao)
 
-        ctk.CTkLabel(self.janela_criacao, text="Personalidade: ").grid(column=1, row=1)
+        # Idade e espécie lado a lado
+        frame_idade_especie = ctk.CTkFrame(self.janela_criacao,fg_color="transparent")
+        frame_idade_especie.grid(column=1, row=1, columnspan=2,sticky="we", padx=5, pady=5)
+        frame_idade_especie.grid_columnconfigure((0, 1), weight=1)
+
+        # Idade
+        coluna_idade = ctk.CTkFrame(frame_idade_especie,fg_color="transparent")
+        coluna_idade.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+        ctk.CTkLabel(coluna_idade, text="Idade:").pack(anchor="w")
+        self.idade_criacao = ctk.CTkEntry(coluna_idade,placeholder_text="Ex.: 25 anos")
+        self.idade_criacao.pack(fill="x", pady=5)
+
+        # Espécie
+        coluna_especie = ctk.CTkFrame(frame_idade_especie,fg_color="transparent")
+        coluna_especie.grid(row=0, column=1, sticky="ew", padx=(5, 0))
+
+        ctk.CTkLabel(coluna_especie, text="Espécie:").pack(anchor="w")
+
+        self.especie_criacao = ctk.CTkOptionMenu(
+            coluna_especie, values=[ESPECIE_PADRAO],
+            command=lambda valor: self._ao_escolher_especie(self.especie_criacao, valor)
+        )
+        self.especie_criacao.set(ESPECIE_PADRAO)
+        self.especie_criacao.pack(fill="x", pady=5)
+
+        ctk.CTkLabel(self.janela_criacao, text="Personalidade: ").grid(column=1, row=2)
         self.personalidade_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
-        self.personalidade_criacao.grid(column=2, row=1, sticky="we")
+        self.personalidade_criacao.grid(column=2, row=2, sticky="we")
         configurar_textbox(self.personalidade_criacao)
 
-        ctk.CTkLabel(self.janela_criacao, text="Aparencia: ").grid(column=1, row=2)
+        ctk.CTkLabel(self.janela_criacao, text="Aparencia: ").grid(column=1, row=3)
         self.aparencia_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
-        self.aparencia_criacao.grid(column=2, row=2, sticky="we")
+        self.aparencia_criacao.grid(column=2, row=3, sticky="we")
         configurar_textbox(self.aparencia_criacao)
 
-        ctk.CTkLabel(self.janela_criacao, text="Relações").grid(column=1, row=3)
+        ctk.CTkLabel(self.janela_criacao, text="Relações").grid(column=1, row=4)
         self.relacoes_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
-        self.relacoes_criacao.grid(column=2, row=3, sticky="we")
+        self.relacoes_criacao.grid(column=2, row=4, sticky="we")
         configurar_textbox(self.relacoes_criacao)
 
-        ctk.CTkLabel(
-            self.janela_criacao,
-            text="Separe com ';', Ex: Esposa de X; Amiga de X",
-            font=("Helvetica", 11)
-        ).grid(column=2, row=4, sticky="w")
+        ctk.CTkLabel(self.janela_criacao,text="Separe com ';', Ex: Esposa de X; Amiga de X",font=("Helvetica", 11)
+                     ).grid(column=2, row=5, sticky="w")
 
-        ctk.CTkLabel(self.janela_criacao, text="Historia do personagem").grid(column=1, row=5)
+        ctk.CTkLabel(self.janela_criacao, text="Historia do personagem").grid(column=1, row=6)
         self.historia_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
-        self.historia_criacao.grid(column=2, row=5, sticky="we")
+        self.historia_criacao.grid(column=2, row=6, sticky="we")
         configurar_textbox(self.historia_criacao)
 
-        ctk.CTkLabel(self.janela_criacao, text="Poderes:").grid(column=1, row=6)
-        self.poderes_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
-        self.poderes_criacao.grid(column=2, row=6, sticky="we")
-        configurar_textbox(self.poderes_criacao)
+        ctk.CTkLabel(self.janela_criacao, text="Sistema de poder:").grid(column=1, row=7)
+        self.sistema_criacao = ctk.CTkOptionMenu(
+            self.janela_criacao, values=[SISTEMA_PADRAO],
+            command=lambda valor: self._ao_escolher_sistema(self.sistema_criacao, valor)
+        )
+        self.sistema_criacao.set(SISTEMA_PADRAO)
+        self.sistema_criacao.grid(column=2, row=7, sticky="we")
 
-        ctk.CTkLabel(self.janela_criacao, text="Fraquezas:").grid(column=1, row=7)
-        self.fraquezas_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
-        self.fraquezas_criacao.grid(column=2, row=7, sticky="we")
-        configurar_textbox(self.fraquezas_criacao)
-
-        ctk.CTkLabel(self.janela_criacao, text="Habilidades do personagem").grid(column=1, row=8)
+        ctk.CTkLabel(self.janela_criacao, text="Habilidades:").grid(column=1, row=8)
         self.habilidades_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
         self.habilidades_criacao.grid(column=2, row=8, sticky="we")
         configurar_textbox(self.habilidades_criacao)
@@ -807,9 +1059,9 @@ class Personagem:
         ctk.CTkButton(
             self.janela_criacao, text="[Fechar]",
             command=lambda: self.toplevel.withdraw()
-        ).grid(column=1, row=9, sticky="se", pady=10, padx=10)
+        ).grid(column=1, row=10, sticky="se", pady=10, padx=10)
 
         ctk.CTkButton(
             self.janela_criacao, text="[Salvar Personagem]",
             command=lambda: self._salvar_criacao()
-        ).grid(column=2, row=9, sticky="se", pady=10, padx=10)
+        ).grid(column=2, row=10, sticky="se", pady=10, padx=10)
