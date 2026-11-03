@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from widgets import mostrar_imagem, mostrar_frame, ocultar_frame, criar_personagem, criar_label_personagem
 from entry_textbox import configurar_entry, configurar_textbox
-from tkinter import filedialog, messagebox
+from tkinter import messagebox
+from seletores import escolher_arquivo
 import os
 import shutil
 import storage
@@ -338,11 +339,9 @@ class Personagem:
         preview.bind("<Button-1>", lambda e: self._trocar_imagem_edicao())
 
     def _trocar_imagem_edicao(self):
-        novo_caminho = filedialog.askopenfilename(
-            parent=self.toplevel_edicao,
-            title="Selecione uma imagem",
-            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),
-                       ("Todos os arquivos", "*.*")]
+        novo_caminho = escolher_arquivo(
+            "Selecione uma imagem", ["png", "jpg", "jpeg", "webp"],
+            descricao="Imagens", parent=self.toplevel_edicao
         )
 
         if not novo_caminho:
@@ -394,11 +393,9 @@ class Personagem:
         if personagem is None:
             return
 
-        caminho = filedialog.askopenfilename(
-            parent=self.toplevel_edicao,
-            title="Selecione uma imagem",
-            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"),
-                       ("Todos os arquivos", "*.*")]
+        caminho = escolher_arquivo(
+            "Selecione uma imagem", ["png", "jpg", "jpeg", "webp"],
+            descricao="Imagens", parent=self.toplevel_edicao
         )
 
         if not caminho:
@@ -835,9 +832,9 @@ class Personagem:
         self.toplevel.focus_force()
 
     def _escolher_imagem_principal(self):
-        caminho = filedialog.askopenfilename(
-            title="Selecione uma imagem",
-            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"), ("Todos os arquivos", "*.*")]
+        caminho = escolher_arquivo(
+            "Selecione uma imagem", ["png", "jpg", "jpeg", "webp"],
+            descricao="Imagens"
         )
 
         if not caminho:
@@ -850,9 +847,9 @@ class Personagem:
         self.preview_criacao.image = img_ctk
 
     def _adicionar_imagem_galeria_criacao(self):
-        caminho = filedialog.askopenfilename(
-            title="Selecione uma imagem",
-            filetypes=[("Imagens", "*.png *.jpg *.jpeg *.webp"), ("Todos os arquivos", "*.*")]
+        caminho = escolher_arquivo(
+            "Selecione uma imagem", ["png", "jpg", "jpeg", "webp"],
+            descricao="Imagens"
         )
 
         if not caminho:
