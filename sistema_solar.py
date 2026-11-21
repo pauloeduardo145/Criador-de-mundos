@@ -10,7 +10,7 @@ from tkinter import messagebox
 
 import historias
 from calendario import dias_do_ano
-from janela_base import JanelaFerramenta
+from mural import JanelaFerramenta
 from modelos import novo_sistema_solar, novo_planeta
 from undo import HistoricoDesfazer
 

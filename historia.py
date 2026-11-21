@@ -3,7 +3,7 @@ from datetime import datetime
 from tkinter import messagebox
 
 import historias
-from widgets import criar_historia, criar_label
+from widgets import criar_historia, criar_label, vincular_toplevel
 from entry_textbox import configurar_entry
 
 
@@ -176,6 +176,7 @@ class Historia:
 
     def _criar_janela_criacao(self):
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("300x150")
         self.toplevel.title("Criar história")
         self.toplevel.resizable(False, False)

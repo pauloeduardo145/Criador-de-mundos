@@ -3,7 +3,7 @@ import customtkinter as ctk
 
 from tkinter import messagebox
 
-from janela_base import JanelaRascunho
+from mural import JanelaRascunho
 from modelos import novo_dicionario, nova_letra
 from entry_textbox import configurar_entry
 

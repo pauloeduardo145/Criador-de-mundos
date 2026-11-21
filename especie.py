@@ -2,7 +2,7 @@ import customtkinter as ctk
 import historias
 
 from tkinter import filedialog, messagebox
-from widgets import criar_especie, criar_label_especie, atualizar_especie
+from widgets import criar_especie, criar_label_especie, atualizar_especie, vincular_toplevel
 
 class Especie:
     def __init__(self, janela, frame_conteudo, mostrar_no_conteudo,
@@ -150,6 +150,7 @@ class Especie:
 
     def _criar_janela_criacao(self):
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("500x400")
         self.toplevel.title("Criar espécie")
         self.toplevel.resizable(False, False)
@@ -252,6 +253,7 @@ class Especie:
 
     def _criar_janela_edicao(self):
         self.janela_edicao = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.janela_edicao, self.janela)
         self.janela_edicao.geometry("500x400")
         self.janela_edicao.title("Editar espécie")
         self.janela_edicao.resizable(False, False)

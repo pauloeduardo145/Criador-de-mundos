@@ -3,6 +3,17 @@ import historias
 from modelos import nova_historia, novo_personagem, novo_capitulo,novo_sistemapoder,nova_imagem_galeria,nova_observacao, novo_arco, nova_especie
 from PIL import Image
 
+def vincular_toplevel(toplevel, mestre):
+    """
+    Torna `toplevel` filha da janela principal (a CTk do interface.py).
+    - transient: não ganha botão próprio na barra de tarefas, fica sempre à
+      frente da principal e é minimizada/restaurada junto com ela;
+    - como `mestre` é o pai no Tk, fechar a janela principal destrói a filha.
+    """
+    toplevel.transient(mestre.winfo_toplevel())
+    return toplevel
+
+
 def mostrar_frame(frame):
     frame.place(relx=0.5, rely=0.5, anchor="center")
     frame.lift()

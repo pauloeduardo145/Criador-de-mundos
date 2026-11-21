@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-from janela_base import JanelaRascunho
+from mural import JanelaRascunho
 from modelos import novo_calendario
 from entry_textbox import configurar_entry
 

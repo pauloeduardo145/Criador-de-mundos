@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from widgets import vincular_toplevel
 
 class Config:
 
@@ -10,6 +11,7 @@ class Config:
     def janela_confg(self):
 
         self.janela_config = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.janela_config, self.janela)
         self.janela_config.geometry("1000x450")
         self.janela_config.title("Configurações")
         self.janela_config.resizable(False, False)

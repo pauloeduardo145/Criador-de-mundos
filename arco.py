@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from widgets import criar_arco, criar_titulo_arco
+from widgets import criar_arco, criar_titulo_arco, vincular_toplevel
 from tkinter import messagebox
 import historias
 from entry_textbox import configurar_entry, configurar_textbox
@@ -223,6 +223,7 @@ class Arco:
         self.arco_em_edicao = None
 
         self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel_edicao, self.janela)
         self.toplevel_edicao.geometry("320x340")
         self.toplevel_edicao.title("Editar arco")
         self.toplevel_edicao.resizable(False, False)
@@ -331,6 +332,7 @@ class Arco:
 
     def _criar_janela_criacao(self):
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("300x300")
         self.toplevel.title("Criar arco")
         self.toplevel.resizable(False, False)

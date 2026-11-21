@@ -119,6 +119,7 @@ class Observacao:
     def _criar_janela_criacao(self):
 
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("600x500")
         self.toplevel.title("Criar observação")
         self.toplevel.resizable(False, False)
@@ -374,6 +375,7 @@ class Observacao:
         self.observacao_em_edicao = None
 
         self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel_edicao, self.janela)
         self.toplevel_edicao.geometry("600x500")
         self.toplevel_edicao.title("Editar observação")
         self.toplevel_edicao.resizable(False, False)

@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from widgets import mostrar_imagem, mostrar_frame, ocultar_frame, criar_personagem, criar_label_personagem
+from widgets import mostrar_imagem, mostrar_frame, ocultar_frame, criar_personagem, criar_label_personagem, vincular_toplevel
 from entry_textbox import configurar_entry, configurar_textbox
 from tkinter import messagebox
 from seletores import escolher_arquivo
@@ -542,6 +542,7 @@ class Personagem:
         self.personagem_em_edicao = None
 
         self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel_edicao, self.janela)
         self.toplevel_edicao.geometry("760x640")
         self.toplevel_edicao.title("Editar personagem")
         self.toplevel_edicao.resizable(False, False)
@@ -952,6 +953,7 @@ class Personagem:
 
     def _criar_janela_criacao(self):
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("1000x590")
         self.toplevel.title("Criar personagem")
         self.toplevel.resizable(False, False)

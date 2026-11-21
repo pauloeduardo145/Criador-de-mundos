@@ -29,6 +29,7 @@ class SistemaDePoder:
 
     def _criar_janela_criacao(self):
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("1000x590")
         self.toplevel.title("Criar sistema de poderes")
         self.toplevel.resizable(False, False)
@@ -300,6 +301,7 @@ class SistemaDePoder:
         self.sistema_em_edicao = None
 
         self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel_edicao, self.janela)
         self.toplevel_edicao.geometry("800x650")
         self.toplevel_edicao.title("Editar sistema de poderes")
         self.toplevel_edicao.resizable(False, False)

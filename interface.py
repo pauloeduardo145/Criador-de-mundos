@@ -29,6 +29,16 @@ data_atual = datetime.now().strftime("%Y%m%d_%H%M%S")
 janela = ctk.CTk()
 janela.title("Criador de Mundos")
 
+def _fechar_aplicacao():
+    # Todas as janelas secundárias (CTkToplevel) são filhas de `janela`:
+    # fechar a principal fecha todas elas junto.
+    for filha in list(janela.winfo_children()):
+        if isinstance(filha, ctk.CTkToplevel):
+            filha.destroy()
+    janela.destroy()
+
+janela.protocol("WM_DELETE_WINDOW", _fechar_aplicacao)
+
 # Tamanho baseado na tela atual (em vez de um valor fixo), para que a janela
 # caiba em qualquer monitor. Pode ser redimensionada ou maximizada normalmente.
 _largura_tela = janela.winfo_screenwidth()
@@ -558,11 +568,13 @@ def excluir_item(*args):
 
 from perfil import Perfil
 
+perfil = Perfil(janela)  # instância única: o botão só reabre a mesma janela
+
 caixa_frame = ctk.CTkFrame(janela,width=220,height=30)
 caixa_frame.grid_propagate(False)
 caixa_frame.grid(column=0,row=0,sticky="ew",padx=10,pady=5)
 
-perfil_config = ctk.CTkButton(caixa_frame,height=10,text="👤",fg_color="black",width=4,font=("Helvetica", 7), command=lambda: Perfil(janela).abrir_perfil())
+perfil_config = ctk.CTkButton(caixa_frame,height=10,text="👤",fg_color="black",width=4,font=("Helvetica", 7), command=lambda: perfil.abrir_perfil())
 perfil_config.grid(column=0,row=0,sticky="n",padx=5,pady=5)
 
 #MOSTRAR NO CONTEUDO

@@ -14,4 +14,6 @@ def estatisticas():
         "arcos": sum(len(h["arcos"]) for h in Historias),
         "capitulos": sum(len(h["capitulos"]) for h in Historias),
         "observacoes": sum(len(h["observacoes"]) for h in Historias),
+        "planetas": sum(len(h.get("planetas", [])) for h in Historias),
+        "calendarios": sum(len(h.get("calendarios", [])) for h in Historias),
     }

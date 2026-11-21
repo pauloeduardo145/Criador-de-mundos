@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from widgets import vincular_toplevel
 
 from storage import carregar_perfil, salvar_perfil
 from updater import VERSAO_ATUAL
@@ -12,28 +13,37 @@ class Perfil:
         self.frame = frame
     
     def abrir_perfil(self):
+        # Uma única janela de perfil: cria na primeira vez e depois só
+        # reaproveita (o X e o botão "Fechar" apenas escondem a janela).
+        if getattr(self, "toplevel", None) is None or not self.toplevel.winfo_exists():
+            self._criar_janela()
 
-        if hasattr(self, "fa"):
-            self.fa.grid()
-            return
+        # Redesenha para mostrar estatísticas e dados atualizados
+        for widget in self.fa.winfo_children():
+            widget.destroy()
+        self.mostrar_perfil()
 
+        self.toplevel.deiconify()
+        self.toplevel.lift()
+        self.toplevel.focus_force()
+
+    def _criar_janela(self):
         self.toplevel = ctk.CTkToplevel(self.frame)
+        vincular_toplevel(self.toplevel, self.frame)
         self.toplevel.geometry("350x400")
         self.toplevel.title("Perfil")
         self.toplevel.resizable(False, False)
+        self.toplevel.protocol("WM_DELETE_WINDOW", self.toplevel.withdraw)
 
         self.fa = ctk.CTkFrame(self.toplevel, width=350, height=400)
         self.fa.pack(fill="both", expand=True)
         self.fa.grid_propagate(False)
-        self.fa.grid(column=2, row=1)
 
         self.fa.grid_columnconfigure(0, weight=1)
         self.fa.grid_columnconfigure(1, weight=1)
 
         for i in range(12):
             self.fa.grid_rowconfigure(i, weight=1)
-        
-        self.mostrar_perfil()
 
     def mostrar_perfil(self):
         #icone
@@ -63,7 +73,9 @@ class Perfil:
             ("✨ Sistemas de Poder", stats["sistemas"]),
             ("🔗 Arcos", stats["arcos"]),
             ("📖 Capítulos", stats["capitulos"]),
-            ("📝 Observações", stats["observacoes"]),
+            ("🌎 Planetas", stats["planetas"]),
+            ("🗓️ Calendário", stats["calendarios"]),
+            ("📝 Observações", stats["observacoes"])
         ]
 
         for i, (texto, valor) in enumerate(dados,start=4):
@@ -77,15 +89,15 @@ class Perfil:
         ## BOTÕES
 
         editar = ctk.CTkButton(self.fa,text="Editar Perfil",command= self.mostrar_edicao)
-        editar.grid(row=10,column=0,columnspan=2,padx=20,pady=(10,5),sticky="ew")
+        editar.grid(row=12,column=0,columnspan=2,padx=20,pady=(10,5),sticky="ew")
 
         fechar = ctk.CTkButton(self.fa,text="Fechar Perfil", command= self.fechar_perfil)
-        fechar.grid(row=11, column=0, columnspan=2,padx=15,pady=(10,5),sticky="ew")
+        fechar.grid(row=13, column=0, columnspan=2,padx=15,pady=(10,5),sticky="ew")
 
         ## VERSÃO
 
         versao = ctk.CTkLabel(self.fa,text=f" Versão: {VERSAO_ATUAL}",anchor="e")
-        versao.grid(row=12,column=1)
+        versao.grid(row=14,column=1)
 
     def fechar_perfil(self):
         self.toplevel.withdraw()

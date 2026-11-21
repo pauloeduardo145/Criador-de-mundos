@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from widgets import mostrar_frame, ocultar_frame, criar_capitulo, criar_label_capitulo
+from widgets import mostrar_frame, ocultar_frame, criar_capitulo, criar_label_capitulo, vincular_toplevel
 from entry_textbox import configurar_entry, configurar_textbox
 from tkinter import messagebox
 import historias
@@ -169,6 +169,7 @@ class Capitulo:
         self.arco_var_edicao = ctk.StringVar(value="Sem arco")
 
         self.toplevel_edicao = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel_edicao, self.janela)
         self.toplevel_edicao.geometry("800x600")
         self.toplevel_edicao.title("Editar capítulo")
         self.toplevel_edicao.resizable(False, False)
@@ -387,6 +388,7 @@ class Capitulo:
 
     def _criar_janela_criacao(self):
         self.toplevel = ctk.CTkToplevel(self.janela)
+        vincular_toplevel(self.toplevel, self.janela)
         self.toplevel.geometry("1000x600")
         self.toplevel.title("Criar capitulo")
         self.toplevel.resizable(False, False)

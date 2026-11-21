@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageTk
 
 import historias
 from storage import PASTA_DESENHOS
-from janela_base import JanelaFerramenta
+from mural import JanelaFerramenta
 from modelos import novo_desenho
 from undo import HistoricoDesfazer
 
