@@ -14,7 +14,7 @@ jobs:
           - os: windows-latest
             artifact_name: CriadorDeMundos-windows
             asset_path: dist/CriadorDeMundos.exe
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             artifact_name: CriadorDeMundos-linux
             asset_path: dist/CriadorDeMundos
           - os: macos-latest
