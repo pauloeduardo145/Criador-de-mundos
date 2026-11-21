@@ -2,8 +2,8 @@ from storage import carregar_dados, salvar_dados
 
 Historias = carregar_dados()
 
-def atualizar():
-    salvar_dados(Historias)
+def atualizar(backup=True):
+    salvar_dados(Historias, backup=backup)
 
 def estatisticas():
 

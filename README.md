@@ -23,6 +23,11 @@ Com ele é possível criar histórias completas contendo personagens, capítulos
 * 📝 Observações
 * ✏️ Edição de todos os elementos
 * 🗑️ Exclusão de histórias, personagens, capítulos e observações
+* 🖼️ Mural (cada ferramenta abre em seu próprio Toplevel, com Ctrl+Z / Ctrl+Y):
+  * 📅 Calendários personalizados (dias, semanas, meses, anos variáveis, visualização antes de salvar)
+  * 📖 Dicionários que funcionam como fontes (letras desenhadas, atributos, visualização)
+  * 🎨 Desenhar (camadas, pincel, formas, balde, salvamento automático, exportação png/jpeg/jpg/webp)
+  * 🪐 Sistemas solares, planetas e galáxia (órbitas animadas, arrastar e soltar, distância em anos-luz)
 * 💾 Salvamento automático dos dados
 
 ## 🚀 Tecnologias utilizadas

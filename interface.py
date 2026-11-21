@@ -291,6 +291,7 @@ from sistema_de_poder import SistemaDePoder
 from observacao import Observacao
 from historia import Historia
 from especie import Especie
+from mural import Mural
 
 def selecionar_sistemapoder(sistemapode):
     gerenciador_sistema_poder.selecionar(sistemapode)
@@ -385,6 +386,15 @@ gerenciador_especies = Especie(
     apos_criar=lambda h: gerenciador_historia.selecionar(h),
     ao_criar_especie=lambda e: gerenciador_personagem.atualizar_especies(e))
 
+gerenciador_mural = Mural(
+    janela,
+    frame_lista_conteudo,
+    mostrar_no_conteudo,
+    obter_historia_selecionada=lambda: gerenciador_historia.historia_selecionada,
+    # "navegar" só é definido mais abaixo no arquivo (late binding, como em Observacao).
+    navegar=lambda funcao, *args: navegar(funcao, *args)
+)
+
 def edicao_sistempoder(*args):
     gerenciador_sistema_poder.editar()
 
@@ -423,6 +433,9 @@ def edicao_especie(*args):
 
 def mostrar_todas_especies(*args):
     gerenciador_especies.mostrar_todos()
+
+def mostrar_mural(event=None):
+    gerenciador_mural.mostrar_mural()
 
 #RECEBER INFORMAÇÕES DA HISTORIA SELECIONADA
 
@@ -573,6 +586,8 @@ botao_obser = ctk.CTkButton(lista_conteudo,text="Observação",command=lambda: n
 
 botao_especie = ctk.CTkButton(lista_conteudo, text="Especie",command=lambda: navegar(mostrar_todas_especies))
 
+botao_mural =  ctk.CTkButton(lista_conteudo, text="Mural",command=lambda: navegar(mostrar_mural))
+
 botao_excluir= ctk.CTkButton(lista_conteudo,text="Excluir",command=lambda: excluir_item())
 
 quebrar_botoes_em_linhas(
@@ -580,7 +595,7 @@ quebrar_botoes_em_linhas(
     [
         botao_voltar, botao_pers, botao_capi, botao_image,
         botao_image_galeria, botao_sispower, botao_obser,
-        botao_especie, botao_excluir
+        botao_especie, botao_mural, botao_excluir
     ],
     padx=5,
     pady=5
@@ -612,6 +627,7 @@ janela.bind("<Control-Key-3>", lambda event: navegar(mostrar_todas_imagens))
 janela.bind("<Control-Key-4>", lambda event: navegar(mostrar_todas_imagens_da_galeria))
 janela.bind("<Control-Key-5>", lambda event: navegar(mostrar_todos_sistemas_poder))
 janela.bind("<Control-Key-6>", lambda event: navegar(mostrar_todas_observacoes))
+janela.bind("<Control-Key-7>", lambda event: navegar(mostrar_mural))
 janela.bind("<Alt-Left>", lambda event: voltar())
 
 #ATALHOS DE EDIÇÃO
@@ -634,7 +650,8 @@ def carregar():
 
     historia_json = os.path.expanduser("~/Documentos/Criador de Mundos/historias.json")
 
-    chaves = ["personagens", "capitulos", "sistemas_poder", "observacoes", "arcos", "especies"]
+    chaves = ["personagens", "capitulos", "sistemas_poder", "observacoes", "arcos", "especies",
+              "calendarios", "dicionarios", "desenhos", "sistemas_solares", "planetas"]
 
     with open(historia_json, "r", encoding="utf-8") as f:
         historias = json.load(f)

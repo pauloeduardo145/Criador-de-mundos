@@ -10,12 +10,14 @@ PASTA_BACKUP = os.path.join(PASTA_PROJETO, "Backups Criador de Mundos")
 PASTA_IMAGENS = os.path.join(PASTA_PROJETO, "IMAGENS")
 ARQUIVO_DADOS = os.path.join(PASTA_PROJETO, "historias.json")
 PASTA_GALERIA = os.path.join(PASTA_PROJETO,"GALERIA")
+PASTA_DESENHOS = os.path.join(PASTA_PROJETO,"DESENHOS")
 ARQUIVO_PERFIL = os.path.join(PASTA_PROJETO,"perfil.json")
 
 # Garante que as pastas existam
 os.makedirs(PASTA_IMAGENS, exist_ok=True)
 os.makedirs(PASTA_BACKUP, exist_ok=True)
 os.makedirs(PASTA_GALERIA, exist_ok=True)
+os.makedirs(PASTA_DESENHOS, exist_ok=True)
 
 def limpar_backups_antigos(max_quantidade=30):
     arquivos = sorted(
@@ -73,10 +75,15 @@ def carregar_dados():
 
     return dados
     
-def salvar_dados(dados):
+def salvar_dados(dados, backup=True):
     # 1. Salva o JSON
     with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, indent=4)
+
+    # Salvamentos automáticos frequentes (ex.: a cada traço de um desenho)
+    # não geram backup zip, para não ficarem lentos.
+    if not backup:
+        return
 
     # 2. Cria o Backup
     # CORREÇÃO: O backup deve ser da PASTA_PROJETO (ou IMAGENS), não da pasta de BACKUP.
