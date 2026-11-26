@@ -27,7 +27,7 @@ def nova_especie(nome, historia, descricao=""):
         "descricao": descricao
     }
 
-def novo_personagem(nome, idade,especie,historia,caminho_imagem,personalidade,aparencia,his,relacoes,sistema,hab):
+def novo_personagem(nome, idade,especie,historia,caminho_imagem,personalidade,aparencia,his,relacoes,sistema,hab,nome_poder=""):
     return {
         "nome": nome,
         "idade": idade,
@@ -41,6 +41,7 @@ def novo_personagem(nome, idade,especie,historia,caminho_imagem,personalidade,ap
         "historia": his,
         "relacoes": relacoes,
         "sistema_poder": sistema["id"] if sistema else "",
+        "nome_poder": nome_poder,
         "habilidades": hab
     }
 

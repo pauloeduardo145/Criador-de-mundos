@@ -105,7 +105,7 @@ def atualizar_especie(historia, especie, nome, descricao):
     historias.atualizar()
     return True
 
-def criar_personagem(historia,nome,idade,especie,imagem,personalidade,aparencia,his,relacoes,sistema,hab):
+def criar_personagem(historia,nome,idade,especie,imagem,personalidade,aparencia,his,relacoes,sistema,hab,nome_poder=""):
 
     if not nome.strip():
         print("Digite um nome.")
@@ -120,7 +120,7 @@ def criar_personagem(historia,nome,idade,especie,imagem,personalidade,aparencia,
             print("Já existe um personagem com esse nome.")
             return p
 
-    personagem = novo_personagem(nome,idade,especie,historia,imagem,personalidade,aparencia,his,relacoes,sistema,hab)
+    personagem = novo_personagem(nome,idade,especie,historia,imagem,personalidade,aparencia,his,relacoes,sistema,hab,nome_poder)
 
     historia["personagens"].append(personagem)
 

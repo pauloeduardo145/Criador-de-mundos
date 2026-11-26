@@ -244,7 +244,7 @@ class Personagem:
 
         for chave, valor in personagem.items():
 
-            if chave in ["imagens", "galeria", "id", "historia_id", "nome", "idade", "especie"]:
+            if chave in ["imagens", "galeria", "id", "historia_id", "nome", "idade", "especie", "nome_poder"]:
                 continue
 
             rotulo_chave = chave
@@ -252,6 +252,9 @@ class Personagem:
             if chave == "sistema_poder":
                 rotulo_chave = "sistema de poder"
                 valor = self._nome_sistema(valor)
+                nome_poder = (personagem.get("nome_poder") or "").strip()
+                if nome_poder:
+                    valor = f"{valor} {nome_poder}" if valor != "—" else nome_poder
 
             ctk.CTkLabel(
                 frame_info, text=f"{rotulo_chave}:", font=("Arial", 16, "bold")
@@ -306,6 +309,8 @@ class Personagem:
             None
         )
         self._preencher_menu_sistema(self.sistema_edicao, atual_sistema)
+        self.nome_poder_edicao.delete(0, "end")
+        self.nome_poder_edicao.insert(0, personagem.get("nome_poder", ""))
 
         for chave, caixa in self.campos_edicao.items():
             caixa.delete("1.0", "end")
@@ -494,6 +499,7 @@ class Personagem:
             None
         )
         personagem["sistema_poder"] = sistema_escolhido["id"] if sistema_escolhido else ""
+        personagem["nome_poder"] = self.nome_poder_edicao.get().strip()
         personagem.pop("poderes", None)
         personagem.pop("fraquezas", None)
 
@@ -620,12 +626,23 @@ class Personagem:
             if chave == "habilidades":
                 ctk.CTkLabel(corpo, text="Sistema de poder:").pack(anchor="w", padx=10, pady=(10, 0))
 
+                frame_sistema = ctk.CTkFrame(corpo, fg_color="transparent")
+                frame_sistema.pack(fill="x", padx=10, pady=5)
+                frame_sistema.grid_columnconfigure(0, weight=1)
+                frame_sistema.grid_columnconfigure(1, weight=1)
+
                 self.sistema_edicao = ctk.CTkOptionMenu(
-                    corpo, values=[SISTEMA_PADRAO],
+                    frame_sistema, values=[SISTEMA_PADRAO],
                     command=lambda valor: self._ao_escolher_sistema(self.sistema_edicao, valor)
                 )
                 self.sistema_edicao.set(SISTEMA_PADRAO)
-                self.sistema_edicao.pack(fill="x", padx=10, pady=5)
+                self.sistema_edicao.grid(row=0, column=0, sticky="ew", padx=(0, 5))
+
+                self.nome_poder_edicao = ctk.CTkEntry(
+                    frame_sistema, placeholder_text="Nome do poder (Ex.: Fusimorfo)"
+                )
+                self.nome_poder_edicao.grid(row=0, column=1, sticky="ew", padx=(5, 0))
+                configurar_entry(self.nome_poder_edicao)
 
             ctk.CTkLabel(corpo, text=rotulo).pack(anchor="w", padx=10, pady=(10, 0))
 
@@ -827,6 +844,7 @@ class Personagem:
         self.especie_criacao._ultima_escolha = ESPECIE_PADRAO
 
         self._preencher_menu_sistema(self.sistema_criacao)
+        self.nome_poder_criacao.delete(0, "end")
 
         self.toplevel.deiconify()
         self.toplevel.lift()
@@ -922,7 +940,8 @@ class Personagem:
             self.historia_criacao.get("1.0", "end-1c"),
             self.relacoes_criacao.get("1.0", "end-1c"),
             sistema,
-            self.habilidades_criacao.get("1.0", "end-1c")
+            self.habilidades_criacao.get("1.0", "end-1c"),
+            self.nome_poder_criacao.get().strip()
         )
 
         if novo is None:
@@ -1043,12 +1062,22 @@ class Personagem:
         configurar_textbox(self.historia_criacao)
 
         ctk.CTkLabel(self.janela_criacao, text="Sistema de poder:").grid(column=1, row=7)
+        frame_sistema_criacao = ctk.CTkFrame(self.janela_criacao, fg_color="transparent")
+        frame_sistema_criacao.grid(column=2, row=7, sticky="we")
+        frame_sistema_criacao.grid_columnconfigure((0, 1), weight=1)
+
         self.sistema_criacao = ctk.CTkOptionMenu(
-            self.janela_criacao, values=[SISTEMA_PADRAO],
+            frame_sistema_criacao, values=[SISTEMA_PADRAO],
             command=lambda valor: self._ao_escolher_sistema(self.sistema_criacao, valor)
         )
         self.sistema_criacao.set(SISTEMA_PADRAO)
-        self.sistema_criacao.grid(column=2, row=7, sticky="we")
+        self.sistema_criacao.grid(row=0, column=0, sticky="we", padx=(0, 5))
+
+        self.nome_poder_criacao = ctk.CTkEntry(
+            frame_sistema_criacao, placeholder_text="Nome do poder (Ex.: Fusimorfo)"
+        )
+        self.nome_poder_criacao.grid(row=0, column=1, sticky="we", padx=(5, 0))
+        configurar_entry(self.nome_poder_criacao)
 
         ctk.CTkLabel(self.janela_criacao, text="Habilidades:").grid(column=1, row=8)
         self.habilidades_criacao = ctk.CTkTextbox(self.janela_criacao, height=50)
